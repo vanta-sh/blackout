@@ -13,7 +13,7 @@ Below are simple one-line commands that will download and run Blackout automatic
 If you have shell access on your Chromebook, paste this command:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/yourusername/blackout/main/blackout_installer.sh | sudo bash
+curl -sL https://raw.githubusercontent.com/vanta-sh/blackout/main/blackout_installer.sh | sudo bash
 ```
 
 ### Method 2: Recovery Mode Installation
@@ -21,7 +21,7 @@ curl -sL https://raw.githubusercontent.com/yourusername/blackout/main/blackout_i
 If you're in recovery mode and need to modify your internal storage:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/yourusername/blackout/main/blackout_installer.sh | sudo bash
+curl -sL https://raw.githubusercontent.com/vanta-sh/blackout/main/blackout_installer.sh | sudo bash
 ```
 
 The installer will automatically detect that you're in recovery mode and attempt to mount your internal storage.
@@ -32,7 +32,7 @@ If you prefer to examine the script before running it:
 
 ```bash
 # Download the installer
-curl -sL https://raw.githubusercontent.com/yourusername/blackout/main/blackout_installer.sh -o blackout_installer.sh
+curl -sL https://raw.githubusercontent.com/vanta-sh/blackout/main/blackout_installer.sh -o blackout_installer.sh
 
 # Make it executable
 chmod +x blackout_installer.sh
