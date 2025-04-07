@@ -31,7 +31,7 @@ This method works if you can gain temporary shell access through a Linux contain
 
 3. **Download and Run Blackout**:
    ```bash
-   curl -sL https://raw.githubusercontent.com/yourusername/blackout/main/blackout.sh -o blackout.sh
+   curl -sL https://raw.githubusercontent.com/vanta-sh/blackout/main/blackout.sh -o blackout.sh
    chmod +x blackout.sh
    ./blackout.sh
    ```
@@ -62,7 +62,7 @@ This method boots your Chromebook into a recovery environment, giving you shell 
    - After creating the recovery USB, do not eject it
    - Download the Blackout script to the USB drive:
      ```
-     curl -sL https://raw.githubusercontent.com/yourusername/blackout/main/blackout.sh -o /path/to/usb/blackout.sh
+     curl -sL https://raw.githubusercontent.com/vanta-sh/blackout/main/blackout.sh -o /path/to/usb/blackout.sh
      chmod +x /path/to/usb/blackout.sh
      ```
 
