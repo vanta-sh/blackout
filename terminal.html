@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal</title>
+    <style>
+        :root {
+            --bg-color: #0c0c0c;
+            --text-color: #0f0;
+            --prompt-color: #00ff00;
+            --cursor-color: #00ff00;
+            --error-color: #ff0000;
+            --warning-color: #ffcc00;
+            --success-color: #00ff00;
+            --highlight-color: #00ffff;
+            --selection-color: rgba(0, 255, 0, 0.3);
+            --header-color: #5b5b5b;
+            --font-family: 'Courier New', monospace;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-family);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .terminal-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            width: 100%;
+            max-height: calc(100vh - 40px);
+        }
+        
+        .terminal-header {
+            background-color: var(--header-color);
+            padding: 5px 10px;
+            font-size: 14px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #888;
+        }
+        
+        .terminal-controls {
+            display: flex;
+        }
+        
+        .terminal-button {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            margin-left: 8px;
+            cursor: pointer;
+        }
+        
+        .terminal-button.close {
+            background-color: #ff5f56;
+        }
+        
+        .terminal-button.minimize {
+            background-color: #ffbd2e;
+        }
+        
+        .terminal-button.maximize {
+            background-color: #27c93f;
+        }
+        
+        .terminal-output {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: var(--bg-color);
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+        
+        .terminal-iframe-container {
+            flex: 1;
+            display: none;
+            border: 1px solid #333;
+            background-color: #fff;
+        }
+        
+        .terminal-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .terminal-input-line {
+            display: flex;
+            padding: 5px 10px;
+            background-color: var(--bg-color);
+            border-top: 1px solid #333;
+        }
+        
+        .terminal-prompt {
+            color: var(--prompt-color);
+            margin-right: 8px;
+            user-select: none;
+        }
+        
+        .terminal-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            font-family: var(--font-family);
+            font-size: 14px;
+            outline: none;
+            padding: 0;
+        }
+        
+        .terminal-cursor {
+            background-color: var(--cursor-color);
+            display: inline-block;
+            width: 8px;
+            height: 14px;
+            margin-left: 2px;
+            animation: blink 1s step-end infinite;
+        }
+        
+        .help-text {
+            color: var(--text-color);
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .help-command {
+            color: var(--highlight-color);
+            margin-right: 10px;
+        }
+        
+        .help-description {
+            color: var(--text-color);
+        }
+        
+        .error-text {
+            color: var(--error-color);
+            font-weight: bold;
+        }
+        
+        .success-text {
+            color: var(--success-color);
+        }
+        
+        .warning-text {
+            color: var(--warning-color);
+        }
+        
+        .ascii-art {
+            color: var(--highlight-color);
+            font-family: monospace;
+            white-space: pre;
+            font-size: 10px;
+            line-height: 1.2;
+            margin-bottom: 10px;
+        }
+        
+        .screen-block {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: black;
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: #666;
+            font-size: 1.5em;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .status-bar {
+            background-color: var(--header-color);
+            color: var(--text-color);
+            font-size: 12px;
+            padding: 5px 10px;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #555;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+        
+        .status-indicator.active {
+            background-color: var(--success-color);
+            box-shadow: 0 0 5px var(--success-color);
+        }
+        
+        .status-indicator.inactive {
+            background-color: var(--error-color);
+            box-shadow: 0 0 5px var(--error-color);
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        ::selection {
+            background-color: var(--selection-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal-header">
+        <span>BLACKOUT-SHELL - root@vantasys</span>
+        <div class="terminal-controls">
+            <div class="terminal-button minimize"></div>
+            <div class="terminal-button maximize"></div>
+            <div class="terminal-button close"></div>
+        </div>
+    </div>
+    
+    <div class="terminal-container">
+        <div class="terminal-output" id="terminal-output">
+            <div class="ascii-art">
+██████╗ ██╗      █████╗  ██████╗██╗  ██╗ ██████╗ ██╗   ██╗████████╗
+██╔══██╗██║     ██╔══██╗██╔════╝██║ ██╔╝██╔═══██╗██║   ██║╚══██╔══╝
+██████╔╝██║     ███████║██║     █████╔╝ ██║   ██║██║   ██║   ██║   
+██╔══██╗██║     ██╔══██║██║     ██╔═██╗ ██║   ██║██║   ██║   ██║   
+██████╔╝███████╗██║  ██║╚██████╗██║  ██╗╚██████╔╝╚██████╔╝   ██║   
+╚═════╝ ╚══════╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝ ╚═════╝  ╚═════╝    ╚═╝   
+            </div>
+            <div>BLACKOUT CLI v1.0.0 - A terminal-based browsing shield</div>
+            <div>Developed by Vanta - Type 'help' for available commands</div>
+            <div>-----------------------------------------------------------</div>
+            <div class="warning-text">[ ! ] DISCLAIMER: For educational purposes only.</div>
+            <div class="warning-text">[ ! ] Using this tool may violate your school's acceptable use policy.</div>
+            <div>-----------------------------------------------------------</div>
+            <div>Current status: <span class="success-text">STEALTH MODE ACTIVE</span></div>
+            <div>GoGuardian protection: <span class="success-text">ENABLED</span></div>
+            <div>-----------------------------------------------------------</div>
+        </div>
+
+        <div class="terminal-iframe-container" id="iframe-container">
+            <iframe id="browser-frame" src="about:blank" class="terminal-iframe" sandbox="allow-same-origin allow-scripts allow-forms allow-popups"></iframe>
+        </div>
+        
+        <div class="terminal-input-line">
+            <span class="terminal-prompt" id="terminal-prompt">root@vantasys:~$</span>
+            <input type="text" class="terminal-input" id="terminal-input" autofocus>
+        </div>
+    </div>
+    
+    <div class="status-bar">
+        <div>
+            <span class="status-indicator active" id="stealth-indicator"></span>
+            Stealth: <span id="stealth-status">ACTIVE</span>
+        </div>
+        <div>
+            <span id="monitoring-status">No monitoring detected</span>
+        </div>
+        <div>
+            Mode: <span id="mode-status">Terminal</span>
+        </div>
+    </div>
+    
+    <div id="screen-block" class="screen-block">
+        <div class="ascii-art">
+████████╗███████╗██████╗ ███╗   ███╗██╗███╗   ██╗ █████╗ ██╗     
+╚══██╔══╝██╔════╝██╔══██╗████╗ ████║██║████╗  ██║██╔══██╗██║     
+   ██║   █████╗  ██████╔╝██╔████╔██║██║██╔██╗ ██║███████║██║     
+   ██║   ██╔══╝  ██╔══██╗██║╚██╔╝██║██║██║╚██╗██║██╔══██║██║     
+   ██║   ███████╗██║  ██║██║ ╚═╝ ██║██║██║ ╚████║██║  ██║███████╗
+   ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝
+        </div>
+        <div>
+            System: Standard terminal session in progress
+        </div>
+        <div style="font-size: 0.5em; margin-top: 20px;">
+            (Only you can see this message, monitoring sees terminal)
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elements
+            const terminalOutput = document.getElementById('terminal-output');
+            const terminalInput = document.getElementById('terminal-input');
+            const terminalPrompt = document.getElementById('terminal-prompt');
+            const iframeContainer = document.getElementById('iframe-container');
+            const browserFrame = document.getElementById('browser-frame');
+            const screenBlock = document.getElementById('screen-block');
+            const stealthIndicator = document.getElementById('stealth-indicator');
+            const stealthStatus = document.getElementById('stealth-status');
+            const monitoringStatus = document.getElementById('monitoring-status');
+            const modeStatus = document.getElementById('mode-status');
+            
+            // State
+            let stealthMode = true;
+            let browserMode = false;
+            let historyIndex = 0;
+            let commandHistory = [];
+            let monitoringDetected = false;
+            let monitoringCheckInterval;
+            
+            // Block common GoGuardian domains
+            const blockedDomains = [
+                'goguardian.com',
+                'gogoslovakia.com',
+                'goguardianleader.com'
+            ];
+            
+            // Initialize
+            terminalInput.focus();
+            setupMonitoringDetection();
+            
+            // Command handler
+            terminalInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    const command = terminalInput.value.trim();
+                    if (command) {
+                        commandHistory.push(command);
+                        historyIndex = commandHistory.length;
+                        executeCommand(command);
+                        terminalInput.value = '';
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    if (historyIndex > 0) {
+                        historyIndex--;
+                        terminalInput.value = commandHistory[historyIndex];
+                    }
+                    e.preventDefault();
+                } else if (e.key === 'ArrowDown') {
+                    if (historyIndex < commandHistory.length - 1) {
+                        historyIndex++;
+                        terminalInput.value = commandHistory[historyIndex];
+                    } else {
+                        historyIndex = commandHistory.length;
+                        terminalInput.value = '';
+                    }
+                    e.preventDefault();
+                } else if (e.key === 'Tab') {
+                    e.preventDefault();
+                    autoCompleteCommand();
+                } else if (e.key === 'c' && e.ctrlKey) {
+                    if (browserMode) {
+                        toggleBrowserMode();
+                        printOutput('Browser mode deactivated', 'success-text');
+                    } else {
+                        printOutput('^C');
+                        terminalInput.value = '';
+                    }
+                }
+            });
+            
+            // Command execution
+            function executeCommand(command) {
+                printOutput(terminalPrompt.textContent + ' ' + command);
+                
+                const args = command.split(' ');
+                const cmd = args[0].toLowerCase();
+                
+                switch (cmd) {
+                    case 'help':
+                        showHelp();
+                        break;
+                    case 'clear':
+                    case 'cls':
+                        clearTerminal();
+                        break;
+                    case 'browse':
+                        handleBrowseCommand(args);
+                        break;
+                    case 'status':
+                        showStatus();
+                        break;
+                    case 'stealth':
+                        toggleStealth();
+                        break;
+                    case 'exit':
+                    case 'quit':
+                        printOutput('Cannot exit terminal. Use browser navigation instead.', 'warning-text');
+                        break;
+                    case 'about':
+                        showAbout();
+                        break;
+                    case 'monitor':
+                        forceDetection();
+                        break;
+                    case 'emergency':
+                        emergencyBlock();
+                        break;
+                    case 'secret':
+                        printOutput('Secret developer options activated.', 'success-text');
+                        printOutput('Type "secret help" for advanced commands.', 'success-text');
+                        break;
+                    case 'secret-hide':
+                        printOutput('Immediately hiding all content...', 'warning-text');
+                        emergencyBlock();
+                        break;
+                    default:
+                        printOutput('Command not found: ' + cmd, 'error-text');
+                        printOutput('Type "help" for available commands', 'text-color');
+                }
+                
+                // Auto-scroll to the bottom
+                terminalOutput.scrollTop = terminalOutput.scrollHeight;
+            }
+            
+            // Help command
+            function showHelp() {
+                printOutput('Available commands:');
+                printOutput('<span class="help-command">help</span><span class="help-description">Show this help message</span>');
+                printOutput('<span class="help-command">browse [url]</span><span class="help-description">Open browser with optional URL</span>');
+                printOutput('<span class="help-command">status</span><span class="help-description">Display current protection status</span>');
+                printOutput('<span class="help-command">stealth</span><span class="help-description">Toggle stealth mode on/off</span>');
+                printOutput('<span class="help-command">clear</span><span class="help-description">Clear terminal output</span>');
+                printOutput('<span class="help-command">emergency</span><span class="help-description">Immediately block screen</span>');
+                printOutput('<span class="help-command">about</span><span class="help-description">Show information about this tool</span>');
+                printOutput('<span class="help-command">exit</span><span class="help-description">Exit the terminal</span>');
+                printOutput('');
+                printOutput('In browser mode:');
+                printOutput('<span class="help-command">Ctrl+C</span><span class="help-description">Return to terminal mode</span>');
+            }
+            
+            // Handle browse command
+            function handleBrowseCommand(args) {
+                if (args.length > 1) {
+                    let url = args[1];
+                    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                        url = 'https://' + url;
+                    }
+                    browserFrame.src = url;
+                    printOutput('Opening browser to: ' + url, 'success-text');
+                }
+                
+                toggleBrowserMode();
+            }
+            
+            // Toggle browser mode
+            function toggleBrowserMode() {
+                browserMode = !browserMode;
+                
+                if (browserMode) {
+                    terminalOutput.style.display = 'none';
+                    iframeContainer.style.display = 'block';
+                    terminalInput.disabled = true;
+                    modeStatus.textContent = 'Browser';
+                } else {
+                    terminalOutput.style.display = 'block';
+                    iframeContainer.style.display = 'none';
+                    terminalInput.disabled = false;
+                    terminalInput.focus();
+                    modeStatus.textContent = 'Terminal';
+                }
+            }
+            
+            // Toggle stealth mode
+            function toggleStealth() {
+                stealthMode = !stealthMode;
+                updateStealthDisplay();
+                
+                if (stealthMode) {
+                    printOutput('Stealth mode activated. GoGuardian protection enabled.', 'success-text');
+                } else {
+                    printOutput('Stealth mode deactivated. YOU ARE VISIBLE TO MONITORING SOFTWARE.', 'error-text');
+                    screenBlock.style.display = 'none';
+                }
+            }
+            
+            // Update stealth display
+            function updateStealthDisplay() {
+                if (stealthMode) {
+                    stealthIndicator.classList.remove('inactive');
+                    stealthIndicator.classList.add('active');
+                    stealthStatus.textContent = 'ACTIVE';
+                    stealthStatus.className = 'success-text';
+                } else {
+                    stealthIndicator.classList.remove('active');
+                    stealthIndicator.classList.add('inactive');
+                    stealthStatus.textContent = 'INACTIVE';
+                    stealthStatus.className = 'error-text';
+                }
+            }
+            
+            // Show status
+            function showStatus() {
+                printOutput('BLACKOUT Terminal Status:');
+                printOutput('-------------------------');
+                printOutput('Stealth Mode: ' + (stealthMode ? '<span class="success-text">ACTIVE</span>' : '<span class="error-text">INACTIVE</span>'));
+                printOutput('Monitoring Detection: ' + (monitoringDetected ? '<span class="warning-text">DETECTED</span>' : '<span class="success-text">NONE</span>'));
+                printOutput('Current Mode: ' + (browserMode ? 'Browser' : 'Terminal'));
+                printOutput('Browser URL: ' + (browserFrame.src !== 'about:blank' ? browserFrame.src : 'None'));
+                printOutput('Protection Status: ' + (stealthMode ? '<span class="success-text">PROTECTED</span>' : '<span class="error-text">UNPROTECTED</span>'));
+            }
+            
+            // Show about
+            function showAbout() {
+                printOutput('-------------------------');
+                printOutput('BLACKOUT Terminal v1.0.0');
+                printOutput('Developed by Vanta');
+                printOutput('-------------------------');
+                printOutput('A terminal-based browsing shield designed to prevent monitoring');
+                printOutput('This tool is for educational purposes only.');
+                printOutput('Features:');
+                printOutput('- Terminal-like interface to disguise browsing activity');
+                printOutput('- Integrated browser with stealth capabilities');
+                printOutput('- GoGuardian detection and blocking');
+                printOutput('- Emergency screen blocking feature');
+                printOutput('-------------------------');
+            }
+            
+            // Emergency block
+            function emergencyBlock() {
+                screenBlock.style.display = 'flex';
+                printOutput('EMERGENCY BLOCK ACTIVATED!', 'error-text');
+                printOutput('Press any key to deactivate', 'warning-text');
+                
+                // Handle click or key to disable
+                const emergencyHandler = function() {
+                    screenBlock.style.display = 'none';
+                    document.removeEventListener('keydown', emergencyHandler);
+                    document.removeEventListener('click', emergencyHandler);
+                    printOutput('Emergency block deactivated', 'success-text');
+                };
+                
+                document.addEventListener('keydown', emergencyHandler, { once: true });
+                document.addEventListener('click', emergencyHandler, { once: true });
+            }
+            
+            // Force monitoring detection
+            function forceDetection() {
+                possibleMonitoringDetected();
+                printOutput('Simulating monitoring detection...', 'warning-text');
+            }
+            
+            // Clear terminal
+            function clearTerminal() {
+                terminalOutput.innerHTML = '';
+            }
+            
+            // Print to terminal
+            function printOutput(text, className = '') {
+                const outputLine = document.createElement('div');
+                if (className) {
+                    outputLine.className = className;
+                }
+                outputLine.innerHTML = text;
+                terminalOutput.appendChild(outputLine);
+            }
+            
+            // Auto-complete command
+            function autoCompleteCommand() {
+                const command = terminalInput.value.toLowerCase();
+                const commands = ['help', 'browse', 'status', 'stealth', 'clear', 'cls', 'exit', 'quit', 'about', 'emergency'];
+                
+                const matchingCommands = commands.filter(cmd => cmd.startsWith(command));
+                
+                if (matchingCommands.length === 1) {
+                    terminalInput.value = matchingCommands[0];
+                } else if (matchingCommands.length > 1) {
+                    printOutput(terminalPrompt.textContent + ' ' + command);
+                    printOutput('Possible completions: ' + matchingCommands.join(', '));
+                }
+            }
+            
+            // Monitor for potential detection
+            function setupMonitoringDetection() {
+                // Monitor focus/blur events
+                let focusTime, blurTime;
+                
+                window.addEventListener('focus', function() {
+                    focusTime = new Date().getTime();
+                    
+                    // If we're returning to our tab very quickly after a blur,
+                    // this might be GoGuardian taking screenshots
+                    if (blurTime && (focusTime - blurTime < 200)) {
+                        possibleMonitoringDetected();
+                    }
+                });
+                
+                window.addEventListener('blur', function() {
+                    blurTime = new Date().getTime();
+                });
+                
+                // Mouse movement monitoring
+                let lastMouseX = 0;
+                let lastMouseY = 0;
+                let suspiciousMovements = 0;
+                
+                document.addEventListener('mousemove', function(e) {
+                    // Detect unnatural mouse movements (straight lines, perfect angles)
+                    // that might indicate automated movement
+                    const dx = e.clientX - lastMouseX;
+                    const dy = e.clientY - lastMouseY;
+                    
+                    // Check for perfectly horizontal or vertical movements
+                    if ((dx === 0 && dy !== 0) || (dy === 0 && dx !== 0)) {
+                        suspiciousMovements++;
+                        if (suspiciousMovements > 5) {
+                            possibleMonitoringDetected();
+                            suspiciousMovements = 0;
+                        }
+                    } else {
+                        suspiciousMovements = Math.max(0, suspiciousMovements - 1);
+                    }
+                    
+                    lastMouseX = e.clientX;
+                    lastMouseY = e.clientY;
+                });
+                
+                // Secret key combination
+                // Press Esc three times quickly
+                let escPressCount = 0;
+                let lastKeyPressTime = 0;
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        const now = new Date().getTime();
+                        if (now - lastKeyPressTime < 500) {
+                            escPressCount++;
+                            if (escPressCount >= 3) {
+                                emergencyBlock();
+                                escPressCount = 0;
+                            }
+                        } else {
+                            escPressCount = 1;
+                        }
+                        lastKeyPressTime = now;
+                    }
+                });
+                
+                // Check for hidden elements periodically
+                monitoringCheckInterval = setInterval(function() {
+                    // Check for elements with screen recording or capture-related classes/IDs
+                    const suspiciousElements = document.querySelectorAll(
+                        '[class*="capture"], [class*="record"], [id*="capture"], [id*="record"], ' + 
+                        '[class*="screen"], [id*="screen"], [class*="monitor"], [id*="monitor"], ' +
+                        '[class*="goguardian"], [id*="goguardian"]'
+                    );
+                    
+                    if (suspiciousElements.length > 0) {
+                        possibleMonitoringDetected();
+                    }
+                }, 2000);
+            }
+            
+            // Handle monitoring detection
+            function possibleMonitoringDetected() {
+                monitoringDetected = true;
+                monitoringStatus.textContent = 'MONITORING DETECTED';
+                monitoringStatus.className = 'warning-text';
+                
+                // Only activate blocking if in stealth mode
+                if (stealthMode) {
+                    screenBlock.style.display = 'flex';
+                    
+                    // Auto-hide the block after a random period (3-8 seconds)
+                    setTimeout(function() {
+                        if (Math.random() > 0.3) { // 70% chance to auto-hide
+                            screenBlock.style.display = 'none';
+                            monitoringDetected = false;
+                            monitoringStatus.textContent = 'No monitoring detected';
+                            monitoringStatus.className = '';
+                        }
+                    }, 3000 + Math.random() * 5000);
+                }
+            }
+            
+            // Terminal window controls
+            document.querySelector('.terminal-button.minimize').addEventListener('click', function() {
+                printOutput('Terminal minimized (simulated)', 'warning-text');
+            });
+            
+            document.querySelector('.terminal-button.maximize').addEventListener('click', function() {
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                }
+            });
+            
+            document.querySelector('.terminal-button.close').addEventListener('click', function() {
+                printOutput('Terminal cannot be closed directly', 'error-text');
+                printOutput('Use browser navigation instead', 'warning-text');
+            });
+            
+            // Always focus the input when clicking anywhere in the terminal
+            document.addEventListener('click', function() {
+                if (!browserMode) {
+                    terminalInput.focus();
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

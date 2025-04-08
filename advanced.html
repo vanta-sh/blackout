@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Viewer</title> <!-- Innocuous title -->
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7f9fc;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            transition: background-color 0.5s;
+        }
+        
+        .dark-mode {
+            background-color: #121212;
+            color: #f1f1f1;
+        }
+        
+        header {
+            background-color: #2196F3;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #1a77c9;
+            position: relative;
+            transition: background-color 0.5s;
+        }
+        
+        .dark-mode header {
+            background-color: #000;
+            border-bottom: 1px solid #333;
+        }
+        
+        .header-title {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .visible-title {
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .hidden-title {
+            position: absolute;
+            top: 0;
+            left: 0;
+            margin: 0;
+            font-size: 24px;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .dark-mode .hidden-title {
+            opacity: 1;
+        }
+        
+        .dark-mode .visible-title {
+            opacity: 0;
+        }
+        
+        main {
+            flex: 1;
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+            width: 90%;
+        }
+        
+        .container {
+            display: flex;
+            gap: 20px;
+            flex-direction: column;
+        }
+        
+        @media (min-width: 768px) {
+            .container {
+                flex-direction: row;
+            }
+            
+            .controls {
+                width: 30%;
+            }
+            
+            .content {
+                width: 70%;
+            }
+        }
+        
+        .controls {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: background-color 0.5s;
+        }
+        
+        .dark-mode .controls {
+            background-color: #1e1e1e;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .url-input {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        #url-box {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px 0 0 5px;
+            transition: background-color 0.5s, border-color 0.5s;
+        }
+        
+        .dark-mode #url-box {
+            background-color: #333;
+            color: #fff;
+            border-color: #555;
+        }
+        
+        #go-button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+        }
+        
+        .content {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.5s;
+        }
+        
+        .dark-mode .content {
+            background-color: #1e1e1e;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .content-header {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: border-color 0.5s;
+        }
+        
+        .dark-mode .content-header {
+            border-color: #333;
+        }
+        
+        .browser-container {
+            flex: 1;
+            min-height: 500px;
+        }
+        
+        iframe {
+            width: 100%;
+            height: 100%;
+            min-height: 500px;
+            border: none;
+        }
+        
+        .switch-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .switch-label {
+            margin-right: 10px;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .status {
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            font-size: 0.9em;
+            background-color: #f0f0f0;
+            transition: background-color 0.5s;
+        }
+        
+        .dark-mode .status {
+            background-color: #333;
+        }
+        
+        .deception-layer {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            background-color: white;
+            flex-direction: column;
+        }
+        
+        .dark-mode .deception-layer {
+            background-color: #121212;
+        }
+        
+        .deception-header {
+            background-color: #2196F3;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .dark-mode .deception-header {
+            background-color: #000;
+        }
+        
+        .deception-content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .document-icon {
+            font-size: 5em;
+            margin-bottom: 20px;
+            color: #2196F3;
+        }
+        
+        .dark-mode .document-icon {
+            color: #666;
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(255, 0, 0, 0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: none;
+            z-index: 2000;
+        }
+        
+        footer {
+            background-color: #f0f0f0;
+            padding: 10px;
+            text-align: center;
+            border-top: 1px solid #ddd;
+            font-size: 12px;
+            color: #666;
+            transition: background-color 0.5s, border-color 0.5s;
+        }
+        
+        .dark-mode footer {
+            background-color: #000;
+            border-color: #333;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div id="deception-layer" class="deception-layer">
+        <div class="deception-header">
+            <h1>Document Viewer</h1>
+        </div>
+        <div class="deception-content">
+            <div class="document-icon">📄</div>
+            <h2>Google Docs Viewer</h2>
+            <p>This is a standard document viewer. Nothing to see here.</p>
+        </div>
+    </div>
+    
+    <header>
+        <div class="header-title">
+            <h1 class="visible-title">Document Viewer</h1>
+            <h1 class="hidden-title">BLACKOUT</h1>
+        </div>
+    </header>
+    
+    <main>
+        <div class="container">
+            <div class="controls">
+                <div class="switch-container">
+                    <span class="switch-label">Stealth Mode:</span>
+                    <label class="switch">
+                        <input type="checkbox" id="stealth-switch" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="switch-container">
+                    <span class="switch-label">Dark Theme:</span>
+                    <label class="switch">
+                        <input type="checkbox" id="theme-switch">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="url-input">
+                    <input type="text" id="url-box" placeholder="Enter URL (e.g., example.com)">
+                    <button id="go-button">GO</button>
+                </div>
+                
+                <div id="status-display" class="status">
+                    Stealth Mode Active: Monitoring protection enabled
+                </div>
+            </div>
+            
+            <div class="content">
+                <div class="content-header">
+                    <span id="current-url">No website loaded</span>
+                </div>
+                <div class="browser-container">
+                    <iframe id="browser-frame" src="about:blank" sandbox="allow-same-origin allow-scripts allow-forms allow-popups"></iframe>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <div id="monitoring-notification" class="notification">
+        ⚠️ GoGuardian monitoring detected!
+    </div>
+    
+    <footer>
+        School Project Template | Educational Use Only
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const stealthSwitch = document.getElementById('stealth-switch');
+            const themeSwitch = document.getElementById('theme-switch');
+            const urlBox = document.getElementById('url-box');
+            const goButton = document.getElementById('go-button');
+            const browserFrame = document.getElementById('browser-frame');
+            const statusDisplay = document.getElementById('status-display');
+            const currentUrl = document.getElementById('current-url');
+            const deceptionLayer = document.getElementById('deception-layer');
+            const monitoringNotification = document.getElementById('monitoring-notification');
+            
+            let stealthMode = true;
+            let lastKeyPressTime = 0;
+            let monitoringDetected = false;
+            
+            // Set up mode switches
+            stealthSwitch.addEventListener('change', function() {
+                stealthMode = this.checked;
+                updateStatusDisplay();
+            });
+            
+            themeSwitch.addEventListener('change', function() {
+                document.body.classList.toggle('dark-mode', this.checked);
+            });
+            
+            // Handle URL navigation
+            goButton.addEventListener('click', navigateToUrl);
+            urlBox.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    navigateToUrl();
+                }
+            });
+            
+            function navigateToUrl() {
+                let url = urlBox.value.trim();
+                
+                // Add https:// if not present
+                if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+                    url = 'https://' + url;
+                }
+                
+                if (url) {
+                    // Update the iframe src
+                    browserFrame.src = url;
+                    currentUrl.textContent = url;
+                }
+            }
+            
+            // Monitor for potential detection
+            function setupMonitoringDetection() {
+                // Monitor focus/blur events
+                let focusTime, blurTime;
+                
+                window.addEventListener('focus', function() {
+                    focusTime = new Date().getTime();
+                    
+                    // If we're returning to our tab very quickly after a blur,
+                    // this might be GoGuardian taking screenshots
+                    if (blurTime && (focusTime - blurTime < 200)) {
+                        possibleMonitoringDetected();
+                    }
+                });
+                
+                window.addEventListener('blur', function() {
+                    blurTime = new Date().getTime();
+                });
+                
+                // Mouse movement monitoring
+                let lastMouseX = 0;
+                let lastMouseY = 0;
+                let suspiciousMovements = 0;
+                
+                document.addEventListener('mousemove', function(e) {
+                    // Detect unnatural mouse movements (straight lines, perfect angles)
+                    // that might indicate automated movement
+                    const dx = e.clientX - lastMouseX;
+                    const dy = e.clientY - lastMouseY;
+                    
+                    // Check for perfectly horizontal or vertical movements
+                    if ((dx === 0 && dy !== 0) || (dy === 0 && dx !== 0)) {
+                        suspiciousMovements++;
+                        if (suspiciousMovements > 5) {
+                            possibleMonitoringDetected();
+                            suspiciousMovements = 0;
+                        }
+                    } else {
+                        suspiciousMovements = Math.max(0, suspiciousMovements - 1);
+                    }
+                    
+                    lastMouseX = e.clientX;
+                    lastMouseY = e.clientY;
+                });
+                
+                // Check for hidden iframes or elements that might be capturing content
+                function checkForHiddenElements() {
+                    const iframes = document.querySelectorAll('iframe:not(#browser-frame)');
+                    if (iframes.length > 0) {
+                        possibleMonitoringDetected();
+                    }
+                    
+                    // Check for elements with screen recording or capture-related classes/IDs
+                    const suspiciousElements = document.querySelectorAll(
+                        '[class*="capture"], [class*="record"], [id*="capture"], [id*="record"], ' + 
+                        '[class*="screen"], [id*="screen"], [class*="monitor"], [id*="monitor"]'
+                    );
+                    
+                    if (suspiciousElements.length > 0) {
+                        possibleMonitoringDetected();
+                    }
+                }
+                
+                // Periodically check for suspicious elements
+                setInterval(checkForHiddenElements, 2000);
+                
+                // Secret key combination to toggle stealth mode in emergencies
+                // Press 'z' three times quickly
+                let zPressCount = 0;
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'z') {
+                        const now = new Date().getTime();
+                        if (now - lastKeyPressTime < 500) {
+                            zPressCount++;
+                            if (zPressCount >= 3) {
+                                toggleEmergencyMode();
+                                zPressCount = 0;
+                            }
+                        } else {
+                            zPressCount = 1;
+                        }
+                        lastKeyPressTime = now;
+                    }
+                });
+            }
+            
+            function possibleMonitoringDetected() {
+                // Only take action if in stealth mode
+                if (!stealthMode) return;
+                
+                monitoringDetected = true;
+                
+                // Show notification briefly
+                monitoringNotification.style.display = 'block';
+                setTimeout(() => {
+                    monitoringNotification.style.display = 'none';
+                }, 3000);
+                
+                // Activate deception layer
+                deceptionLayer.style.display = 'flex';
+                
+                // Auto-hide deception after a period
+                setTimeout(() => {
+                    if (Math.random() > 0.3) { // 70% chance to auto-hide
+                        deceptionLayer.style.display = 'none';
+                        monitoringDetected = false;
+                    }
+                }, 5000 + Math.random() * 5000); // Random delay between 5-10 seconds
+                
+                updateStatusDisplay();
+            }
+            
+            function toggleEmergencyMode() {
+                if (deceptionLayer.style.display === 'flex') {
+                    deceptionLayer.style.display = 'none';
+                    monitoringDetected = false;
+                } else {
+                    deceptionLayer.style.display = 'flex';
+                    monitoringDetected = true;
+                }
+                updateStatusDisplay();
+            }
+            
+            function updateStatusDisplay() {
+                if (stealthMode) {
+                    if (monitoringDetected) {
+                        statusDisplay.textContent = 'ALERT: Monitoring detected - Deception active';
+                    } else {
+                        statusDisplay.textContent = 'Stealth Mode Active: Monitoring protection enabled';
+                    }
+                } else {
+                    statusDisplay.textContent = 'Stealth Mode Disabled: No protection active';
+                    deceptionLayer.style.display = 'none';
+                }
+            }
+            
+            // Additional anti-monitoring measures
+            function setupAntiMonitoring() {
+                // Prevent screenshotting and screen recording APIs
+                document.addEventListener('DOMContentLoaded', function() {
+                    if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+                        navigator.mediaDevices.getDisplayMedia = function() {
+                            return new Promise((resolve, reject) => {
+                                reject(new Error('getDisplayMedia is disabled'));
+                            });
+                        };
+                    }
+                });
+                
+                // Create content mutation observer to watch for GoGuardian elements
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.addedNodes && mutation.addedNodes.length > 0) {
+                            for (let i = 0; i < mutation.addedNodes.length; i++) {
+                                const node = mutation.addedNodes[i];
+                                if (node.nodeType === 1) { // Element node
+                                    // Check if this is potentially a monitoring element
+                                    if (node.id && (
+                                        node.id.includes('goguardian') || 
+                                        node.id.includes('monitor') || 
+                                        node.id.includes('screen')
+                                    )) {
+                                        possibleMonitoringDetected();
+                                    }
+                                    
+                                    if (node.className && (
+                                        node.className.includes('goguardian') || 
+                                        node.className.includes('monitor') || 
+                                        node.className.includes('screen')
+                                    )) {
+                                        possibleMonitoringDetected();
+                                    }
+                                }
+                            }
+                        }
+                    });
+                });
+                
+                // Start observing
+                observer.observe(document.body, { childList: true, subtree: true });
+            }
+            
+            // Initialize
+            setupMonitoringDetection();
+            setupAntiMonitoring();
+            updateStatusDisplay();
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blackout</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #f1f1f1;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        header {
+            background-color: #000;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #333;
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        
+        .developer {
+            font-size: 14px;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        main {
+            flex: 1;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        .controls {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .mode-select {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        
+        .mode-button {
+            background-color: #333;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .mode-button:hover {
+            background-color: #444;
+        }
+        
+        .mode-button.active {
+            background-color: #2196F3;
+        }
+        
+        .url-input {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        #url-box {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px 0 0 5px;
+            background-color: #333;
+            color: #fff;
+        }
+        
+        #go-button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .status.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .browser-container {
+            height: 500px;
+            border-radius: 10px;
+            overflow: hidden;
+            background-color: #1e1e1e;
+        }
+        
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .screen-block {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: black;
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            color: #666;
+            font-size: 2em;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .disclaimer {
+            background-color: #333;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-size: 0.8em;
+            color: #aaa;
+        }
+        
+        footer {
+            background-color: #000;
+            padding: 10px;
+            text-align: center;
+            border-top: 1px solid #333;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>BLACKOUT WEB</h1>
+        <div class="developer">by Vanta</div>
+    </header>
+    
+    <main>
+        <div class="controls">
+            <div class="mode-select">
+                <button id="stealth-mode" class="mode-button active">Stealth Mode</button>
+                <button id="browse-mode" class="mode-button">Browse Mode</button>
+            </div>
+            
+            <div class="url-input">
+                <input type="text" id="url-box" placeholder="Enter URL (e.g., example.com)">
+                <button id="go-button">GO</button>
+            </div>
+            
+            <div id="status-display" class="status active">
+                STEALTH MODE ACTIVE - Screen appears black to GoGuardian
+            </div>
+        </div>
+        
+        <div class="browser-container">
+            <iframe id="browser-frame" src="about:blank" sandbox="allow-same-origin allow-scripts allow-forms allow-popups"></iframe>
+        </div>
+        
+        <div class="disclaimer">
+            <strong>Disclaimer:</strong> This tool is for educational purposes only. Using this to bypass monitoring software may violate your school's acceptable use policy. Use at your own risk.
+        </div>
+    </main>
+    
+    <div id="screen-block" class="screen-block">
+        <div>
+            GoGuardian is viewing your screen<br>
+            <small>(Only you can see this message, they see a black screen)</small>
+        </div>
+    </div>
+    
+    <footer>
+        &copy; 2023 Blackout | For educational purposes only
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const stealthModeBtn = document.getElementById('stealth-mode');
+            const browseModeBtn = document.getElementById('browse-mode');
+            const urlBox = document.getElementById('url-box');
+            const goButton = document.getElementById('go-button');
+            const browserFrame = document.getElementById('browser-frame');
+            const statusDisplay = document.getElementById('status-display');
+            const screenBlock = document.getElementById('screen-block');
+            
+            let stealthMode = true;
+            
+            // Set up mode buttons
+            stealthModeBtn.addEventListener('click', function() {
+                stealthMode = true;
+                stealthModeBtn.classList.add('active');
+                browseModeBtn.classList.remove('active');
+                statusDisplay.classList.add('active');
+                statusDisplay.textContent = "STEALTH MODE ACTIVE - Screen appears black to GoGuardian";
+                
+                // When switching to stealth mode, show the black screen briefly
+                updateDisplay();
+            });
+            
+            browseModeBtn.addEventListener('click', function() {
+                stealthMode = false;
+                browseModeBtn.classList.add('active');
+                stealthModeBtn.classList.remove('active');
+                statusDisplay.classList.remove('active');
+                statusDisplay.textContent = "BROWSE MODE - Screen is visible to GoGuardian";
+                updateDisplay();
+            });
+            
+            // Handle URL navigation
+            goButton.addEventListener('click', navigateToUrl);
+            urlBox.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    navigateToUrl();
+                }
+            });
+            
+            function navigateToUrl() {
+                let url = urlBox.value.trim();
+                
+                // Add https:// if not present
+                if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+                    url = 'https://' + url;
+                }
+                
+                if (url) {
+                    // Update the iframe src
+                    browserFrame.src = url;
+                    
+                    // Check if we need to apply stealth mode
+                    updateDisplay();
+                }
+            }
+            
+            // Detect potential GoGuardian activity
+            function detectMonitoring() {
+                // This is a very basic detection method
+                // GoGuardian often uses specific elements or scripts we can check for
+                const possibleMonitoringElements = [
+                    'goguardian',
+                    'classroom-monitor',
+                    'gg-monitor',
+                    'teacher-view'
+                ];
+                
+                try {
+                    // Check if any monitoring elements exist in the iframe
+                    const detection = possibleMonitoringElements.some(element => {
+                        return browserFrame.contentDocument && 
+                               browserFrame.contentDocument.querySelector(`[class*="${element}"], [id*="${element}"]`);
+                    });
+                    
+                    return detection;
+                } catch (e) {
+                    // If we can't access iframe content (due to same-origin policy),
+                    // we assume monitoring might be happening for safety
+                    return true;
+                }
+            }
+            
+            // Update the display based on mode and monitoring detection
+            function updateDisplay() {
+                if (stealthMode) {
+                    // In stealth mode, we need to hide the content when monitoring is detected
+                    const monitoringDetected = detectMonitoring();
+                    
+                    if (monitoringDetected) {
+                        screenBlock.style.display = 'flex';
+                    } else {
+                        // Flash the screen block briefly to simulate a screen refresh
+                        // This helps confuse monitoring software
+                        screenBlock.style.display = 'flex';
+                        setTimeout(() => {
+                            screenBlock.style.display = 'none';
+                        }, 200);
+                    }
+                } else {
+                    // In browse mode, always show content
+                    screenBlock.style.display = 'none';
+                }
+            }
+            
+            // Additional anti-detection measures
+            
+            // Block common GoGuardian domains
+            const blockedDomains = [
+                'goguardian.com',
+                'gogoslovakia.com',
+                'goguardianleader.com'
+            ];
+            
+            // Intercept requests to blocked domains
+            browserFrame.addEventListener('load', function() {
+                try {
+                    const links = browserFrame.contentDocument.querySelectorAll('a');
+                    links.forEach(link => {
+                        const href = link.getAttribute('href');
+                        if (href && blockedDomains.some(domain => href.includes(domain))) {
+                            link.addEventListener('click', function(e) {
+                                e.preventDefault();
+                            });
+                        }
+                    });
+                } catch (e) {
+                    // Ignore cross-origin errors
+                }
+            });
+            
+            // Set up periodic checks for monitoring
+            setInterval(updateDisplay, 5000);
+            
+            // Initialize with stealth mode
+            updateDisplay();
+        });
+    </script>
+</body>
+</html> 
