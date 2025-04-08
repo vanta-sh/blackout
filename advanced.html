@@ -355,6 +355,14 @@
                     </label>
                 </div>
                 
+                <div class="switch-container">
+                    <span class="switch-label">Bypass Mode:</span>
+                    <label class="switch">
+                        <input type="checkbox" id="bypass-switch" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
                 <div class="url-input">
                     <input type="text" id="url-box" placeholder="Enter URL (e.g., example.com)">
                     <button id="go-button">GO</button>
@@ -399,6 +407,7 @@
             let stealthMode = true;
             let lastKeyPressTime = 0;
             let monitoringDetected = false;
+            let bypassMonitoring = true;
             
             // Set up mode switches
             stealthSwitch.addEventListener('change', function() {
@@ -408,6 +417,21 @@
             
             themeSwitch.addEventListener('change', function() {
                 document.body.classList.toggle('dark-mode', this.checked);
+            });
+            
+            const bypassSwitch = document.getElementById('bypass-switch');
+            bypassSwitch.addEventListener('change', function() {
+                bypassMonitoring = this.checked;
+                updateStatusDisplay();
+                
+                // If monitoring is currently detected, update display immediately
+                if (monitoringDetected) {
+                    if (bypassMonitoring) {
+                        deceptionLayer.style.display = 'none';
+                    } else if (stealthMode) {
+                        deceptionLayer.style.display = 'flex';
+                    }
+                }
             });
             
             // Handle URL navigation
@@ -531,16 +555,18 @@
                     monitoringNotification.style.display = 'none';
                 }, 3000);
                 
-                // Activate deception layer
-                deceptionLayer.style.display = 'flex';
-                
-                // Auto-hide deception after a period
-                setTimeout(() => {
-                    if (Math.random() > 0.3) { // 70% chance to auto-hide
-                        deceptionLayer.style.display = 'none';
-                        monitoringDetected = false;
-                    }
-                }, 5000 + Math.random() * 5000); // Random delay between 5-10 seconds
+                // Activate deception layer only if bypass mode is not active
+                if (!bypassMonitoring) {
+                    deceptionLayer.style.display = 'flex';
+                    
+                    // Auto-hide deception after a period
+                    setTimeout(() => {
+                        if (Math.random() > 0.3) { // 70% chance to auto-hide
+                            deceptionLayer.style.display = 'none';
+                            monitoringDetected = false;
+                        }
+                    }, 5000 + Math.random() * 5000); // Random delay between 5-10 seconds
+                }
                 
                 updateStatusDisplay();
             }
@@ -559,7 +585,9 @@
             function updateStatusDisplay() {
                 if (stealthMode) {
                     if (monitoringDetected) {
-                        statusDisplay.textContent = 'ALERT: Monitoring detected - Deception active';
+                        statusDisplay.textContent = bypassMonitoring ? 
+                            'Monitoring detected, but bypass active - Content remains visible' : 
+                            'ALERT: Monitoring detected - Deception active';
                     } else {
                         statusDisplay.textContent = 'Stealth Mode Active: Monitoring protection enabled';
                     }

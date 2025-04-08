@@ -197,7 +197,7 @@
     </div>
     
     <footer>
-        &copy; 2025 Blackout | For educational purposes only
+        &copy; 2023 Blackout | For educational purposes only
     </footer>
     
     <script>
@@ -211,6 +211,7 @@
             const screenBlock = document.getElementById('screen-block');
             
             let stealthMode = true;
+            let bypassMonitoring = true;
             
             // Set up mode buttons
             stealthModeBtn.addEventListener('click', function() {
@@ -284,14 +285,41 @@
                 }
             }
             
+            // Add bypass mode toggle and indicator
+            const statusBar = document.querySelector('.status-bar');
+            const bypassToggle = document.createElement('div');
+            bypassToggle.className = 'bypass-toggle';
+            bypassToggle.innerHTML = '<label for="bypass-checkbox" class="bypass-label">Bypass Mode: <input type="checkbox" id="bypass-checkbox" checked> <span class="bypass-status active">ACTIVE</span></label>';
+            statusBar.appendChild(bypassToggle);
+            
+            const bypassCheckbox = document.getElementById('bypass-checkbox');
+            const bypassStatus = document.querySelector('.bypass-status');
+            
+            bypassCheckbox.addEventListener('change', function() {
+                bypassMonitoring = bypassCheckbox.checked;
+                if (bypassMonitoring) {
+                    bypassStatus.textContent = 'ACTIVE';
+                    bypassStatus.classList.add('active');
+                    bypassStatus.classList.remove('inactive');
+                } else {
+                    bypassStatus.textContent = 'INACTIVE';
+                    bypassStatus.classList.add('inactive');
+                    bypassStatus.classList.remove('active');
+                }
+                updateDisplay();
+            });
+            
             // Update the display based on mode and monitoring detection
             function updateDisplay() {
                 if (stealthMode) {
                     // In stealth mode, we need to hide the content when monitoring is detected
                     const monitoringDetected = detectMonitoring();
                     
-                    if (monitoringDetected) {
+                    if (monitoringDetected && !bypassMonitoring) {
                         screenBlock.style.display = 'flex';
+                    } else if (monitoringDetected && bypassMonitoring) {
+                        // In bypass mode, show content even when monitoring is detected
+                        screenBlock.style.display = 'none';
                     } else {
                         // Flash the screen block briefly to simulate a screen refresh
                         // This helps confuse monitoring software

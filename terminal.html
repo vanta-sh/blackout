@@ -321,6 +321,7 @@
             let commandHistory = [];
             let monitoringDetected = false;
             let monitoringCheckInterval;
+            let bypassMonitoring = true;
             
             // Block common GoGuardian domains
             const blockedDomains = [
@@ -332,6 +333,9 @@
             // Initialize
             terminalInput.focus();
             setupMonitoringDetection();
+            printOutput('Terminal initialized. Type "help" for available commands.', 'success-text');
+            printOutput('NEW FEATURE: GoGuardian Bypass Mode is ACTIVE. Your browsing will continue even if monitoring is detected.', 'success-text');
+            printOutput('Use the "bypass" command to toggle this feature.', 'info-text');
             
             // Command handler
             terminalInput.addEventListener('keydown', function(e) {
@@ -417,6 +421,9 @@
                         printOutput('Immediately hiding all content...', 'warning-text');
                         emergencyBlock();
                         break;
+                    case 'bypass':
+                        toggleBypass();
+                        break;
                     default:
                         printOutput('Command not found: ' + cmd, 'error-text');
                         printOutput('Type "help" for available commands', 'text-color');
@@ -437,6 +444,7 @@
                 printOutput('<span class="help-command">emergency</span><span class="help-description">Immediately block screen</span>');
                 printOutput('<span class="help-command">about</span><span class="help-description">Show information about this tool</span>');
                 printOutput('<span class="help-command">exit</span><span class="help-description">Exit the terminal</span>');
+                printOutput('<span class="help-command">bypass</span><span class="help-description">Toggle GoGuardian bypass mode</span>');
                 printOutput('');
                 printOutput('In browser mode:');
                 printOutput('<span class="help-command">Ctrl+C</span><span class="help-description">Return to terminal mode</span>');
@@ -507,6 +515,7 @@
                 printOutput('BLACKOUT Terminal Status:');
                 printOutput('-------------------------');
                 printOutput('Stealth Mode: ' + (stealthMode ? '<span class="success-text">ACTIVE</span>' : '<span class="error-text">INACTIVE</span>'));
+                printOutput('GoGuardian Bypass: ' + (bypassMonitoring ? '<span class="success-text">ACTIVE</span>' : '<span class="error-text">INACTIVE</span>'));
                 printOutput('Monitoring Detection: ' + (monitoringDetected ? '<span class="warning-text">DETECTED</span>' : '<span class="success-text">NONE</span>'));
                 printOutput('Current Mode: ' + (browserMode ? 'Browser' : 'Terminal'));
                 printOutput('Browser URL: ' + (browserFrame.src !== 'about:blank' ? browserFrame.src : 'None'));
@@ -571,7 +580,7 @@
             // Auto-complete command
             function autoCompleteCommand() {
                 const command = terminalInput.value.toLowerCase();
-                const commands = ['help', 'browse', 'status', 'stealth', 'clear', 'cls', 'exit', 'quit', 'about', 'emergency'];
+                const commands = ['help', 'browse', 'status', 'stealth', 'clear', 'cls', 'exit', 'quit', 'about', 'emergency', 'bypass'];
                 
                 const matchingCommands = commands.filter(cmd => cmd.startsWith(command));
                 
@@ -669,8 +678,8 @@
                 monitoringStatus.textContent = 'MONITORING DETECTED';
                 monitoringStatus.className = 'warning-text';
                 
-                // Only activate blocking if in stealth mode
-                if (stealthMode) {
+                // Only activate blocking if in stealth mode AND bypass is not active
+                if (stealthMode && !bypassMonitoring) {
                     screenBlock.style.display = 'flex';
                     
                     // Auto-hide the block after a random period (3-8 seconds)
@@ -682,7 +691,28 @@
                             monitoringStatus.className = '';
                         }
                     }, 3000 + Math.random() * 5000);
+                } else if (bypassMonitoring) {
+                    // If bypass mode is active, allow content to stay visible
+                    screenBlock.style.display = 'none';
+                    
+                    // Still clear the monitoring detection after a while
+                    setTimeout(function() {
+                        monitoringDetected = false;
+                        monitoringStatus.textContent = 'No monitoring detected';
+                        monitoringStatus.className = '';
+                    }, 5000);
                 }
+            }
+            
+            // Toggle bypass mode
+            function toggleBypass() {
+                bypassMonitoring = !bypassMonitoring;
+                if (bypassMonitoring) {
+                    printOutput('GoGuardian Bypass Mode ACTIVATED - You can browse even when monitoring is detected', 'success-text');
+                } else {
+                    printOutput('GoGuardian Bypass Mode DEACTIVATED - Browser will be hidden when monitoring is detected', 'warning-text');
+                }
+                updateStealthDisplay();
             }
             
             // Terminal window controls
