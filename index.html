@@ -259,55 +259,160 @@
                 }
             }
             
-            // Detect potential GoGuardian activity
-            function detectMonitoring() {
-                // This is a very basic detection method
-                // GoGuardian often uses specific elements or scripts we can check for
-                const possibleMonitoringElements = [
-                    'goguardian',
-                    'classroom-monitor',
-                    'gg-monitor',
-                    'teacher-view'
-                ];
+            // Monitor for potential detection
+            function setupMonitoringDetection() {
+                // Monitor focus/blur events
+                let focusTime, blurTime;
+                let lastDetectionTime = 0;
+                let detectionCount = 0;
                 
-                try {
-                    // Check if any monitoring elements exist in the iframe
-                    const detection = possibleMonitoringElements.some(element => {
-                        return browserFrame.contentDocument && 
-                               browserFrame.contentDocument.querySelector(`[class*="${element}"], [id*="${element}"]`);
-                    });
+                window.addEventListener('focus', function() {
+                    focusTime = new Date().getTime();
                     
-                    return detection;
-                } catch (e) {
-                    // If we can't access iframe content (due to same-origin policy),
-                    // we assume monitoring might be happening for safety
-                    return true;
+                    // If we're returning to our tab very quickly after a blur,
+                    // this might be GoGuardian taking screenshots
+                    if (blurTime && (focusTime - blurTime < 200)) {
+                        const now = new Date().getTime();
+                        if (now - lastDetectionTime < 1000) {
+                            detectionCount++;
+                            if (detectionCount >= 3) {
+                                possibleMonitoringDetected();
+                                detectionCount = 0;
+                            }
+                        } else {
+                            detectionCount = 1;
+                        }
+                        lastDetectionTime = now;
+                    }
+                });
+                
+                window.addEventListener('blur', function() {
+                    blurTime = new Date().getTime();
+                });
+                
+                // Mouse movement monitoring
+                let lastMouseX = 0;
+                let lastMouseY = 0;
+                let suspiciousMovements = 0;
+                let lastMouseTime = 0;
+                
+                document.addEventListener('mousemove', function(e) {
+                    const now = new Date().getTime();
+                    if (now - lastMouseTime < 50) return; // Throttle checks
+                    lastMouseTime = now;
+                    
+                    // Detect unnatural mouse movements (straight lines, perfect angles)
+                    // that might indicate automated movement
+                    const dx = e.clientX - lastMouseX;
+                    const dy = e.clientY - lastMouseY;
+                    
+                    // Check for perfectly horizontal or vertical movements
+                    // with very precise coordinates
+                    if ((Math.abs(dx) < 1 && Math.abs(dy) > 5) || 
+                        (Math.abs(dy) < 1 && Math.abs(dx) > 5)) {
+                        suspiciousMovements++;
+                        if (suspiciousMovements > 5) {
+                            possibleMonitoringDetected();
+                            suspiciousMovements = 0;
+                        }
+                    } else {
+                        suspiciousMovements = Math.max(0, suspiciousMovements - 1);
+                    }
+                    
+                    lastMouseX = e.clientX;
+                    lastMouseY = e.clientY;
+                });
+                
+                // Check for hidden elements periodically
+                function checkForHiddenElements() {
+                    // Check for elements with screen recording or capture-related classes/IDs
+                    const suspiciousElements = document.querySelectorAll(
+                        '[class*="capture"], [class*="record"], [id*="capture"], [id*="record"], ' + 
+                        '[class*="screen"], [id*="screen"], [class*="monitor"], [id*="monitor"]'
+                    );
+                    
+                    // Check for specific GoGuardian elements
+                    const ggElements = document.querySelectorAll(
+                        '[id*="gg-"], [class*="gg-"], ' +
+                        '[id*="goguardian-"], [class*="goguardian-"], ' +
+                        '[id*="teacher-"], [class*="teacher-"]'
+                    );
+                    
+                    // Check for monitoring iframes
+                    const monitoringIframes = document.querySelectorAll('iframe:not(#browser-frame)');
+                    
+                    // Only trigger if we find multiple indicators
+                    if ((suspiciousElements.length > 0 && ggElements.length > 0) ||
+                        (monitoringIframes.length > 0 && ggElements.length > 0) ||
+                        (suspiciousElements.length > 2 && monitoringIframes.length > 0)) {
+                        possibleMonitoringDetected();
+                    }
                 }
+                
+                // Periodically check for suspicious elements
+                setInterval(checkForHiddenElements, 2000);
+                
+                // Check for GoGuardian extension
+                const checkForExtension = setInterval(function() {
+                    if (window.chrome && chrome.runtime) {
+                        chrome.runtime.sendMessage('goguardian', {}, function(response) {
+                            if (chrome.runtime.lastError) {
+                                // Extension not found
+                                clearInterval(checkForExtension);
+                            } else {
+                                // Extension found
+                                possibleMonitoringDetected();
+                            }
+                        });
+                    }
+                }, 5000);
+                
+                // Check for monitoring scripts
+                const scriptObserver = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.addedNodes && mutation.addedNodes.length > 0) {
+                            for (let i = 0; i < mutation.addedNodes.length; i++) {
+                                const node = mutation.addedNodes[i];
+                                if (node.nodeType === 1) { // Element node
+                                    // Check for monitoring scripts
+                                    if (node.tagName === 'SCRIPT') {
+                                        const src = node.src || '';
+                                        if (src.includes('goguardian') || 
+                                            src.includes('monitor') || 
+                                            src.includes('teacher')) {
+                                            possibleMonitoringDetected();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                });
+                
+                scriptObserver.observe(document.documentElement, {
+                    childList: true,
+                    subtree: true
+                });
+                
+                // Secret key combination to toggle stealth mode in emergencies
+                // Press 'z' three times quickly
+                let zPressCount = 0;
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'z') {
+                        const now = new Date().getTime();
+                        if (now - lastKeyPressTime < 500) {
+                            zPressCount++;
+                            if (zPressCount >= 3) {
+                                toggleEmergencyMode();
+                                zPressCount = 0;
+                            }
+                        } else {
+                            zPressCount = 1;
+                        }
+                        lastKeyPressTime = now;
+                    }
+                });
             }
-            
-            // Add bypass mode toggle and indicator
-            const statusBar = document.querySelector('.status-bar');
-            const bypassToggle = document.createElement('div');
-            bypassToggle.className = 'bypass-toggle';
-            bypassToggle.innerHTML = '<label for="bypass-checkbox" class="bypass-label">Bypass Mode: <input type="checkbox" id="bypass-checkbox" checked> <span class="bypass-status active">ACTIVE</span></label>';
-            statusBar.appendChild(bypassToggle);
-            
-            const bypassCheckbox = document.getElementById('bypass-checkbox');
-            const bypassStatus = document.querySelector('.bypass-status');
-            
-            bypassCheckbox.addEventListener('change', function() {
-                bypassMonitoring = bypassCheckbox.checked;
-                if (bypassMonitoring) {
-                    bypassStatus.textContent = 'ACTIVE';
-                    bypassStatus.classList.add('active');
-                    bypassStatus.classList.remove('inactive');
-                } else {
-                    bypassStatus.textContent = 'INACTIVE';
-                    bypassStatus.classList.add('inactive');
-                    bypassStatus.classList.remove('active');
-                }
-                updateDisplay();
-            });
             
             // Update the display based on mode and monitoring detection
             function updateDisplay() {
@@ -365,6 +470,174 @@
             
             // Initialize with stealth mode
             updateDisplay();
+
+            // Enhanced monitoring detection
+            function setupEnhancedMonitoring() {
+                // Network request monitoring
+                function monitorNetworkRequests() {
+                    // Intercept fetch requests
+                    const originalFetch = window.fetch;
+                    window.fetch = function(url, options) {
+                        if (url.includes('goguardian') || 
+                            url.includes('monitor') || 
+                            url.includes('teacher')) {
+                            possibleMonitoringDetected();
+                            return Promise.reject(new Error('Monitoring request blocked'));
+                        }
+                        return originalFetch(url, options);
+                    };
+                    
+                    // Intercept XMLHttpRequest
+                    const originalXHR = window.XMLHttpRequest;
+                    window.XMLHttpRequest = function() {
+                        const xhr = new originalXHR();
+                        const originalOpen = xhr.open;
+                        xhr.open = function(method, url) {
+                            if (url.includes('goguardian') || 
+                                url.includes('monitor') || 
+                                url.includes('teacher')) {
+                                possibleMonitoringDetected();
+                                throw new Error('Monitoring request blocked');
+                            }
+                            return originalOpen.apply(this, arguments);
+                        };
+                        return xhr;
+                    };
+                }
+
+                // Enhanced mouse movement analysis
+                function analyzeMouseMovements() {
+                    let movementHistory = [];
+                    const maxHistory = 10;
+                    
+                    document.addEventListener('mousemove', e => {
+                        const now = new Date().getTime();
+                        movementHistory.push({
+                            x: e.clientX,
+                            y: e.clientY,
+                            time: now
+                        });
+                        
+                        if (movementHistory.length > maxHistory) {
+                            movementHistory.shift();
+                        }
+                        
+                        if (movementHistory.length >= 3) {
+                            const recentMovements = movementHistory.slice(-3);
+                            const angles = calculateMovementAngles(recentMovements);
+                            
+                            // Check for suspicious patterns
+                            if (isSuspiciousPattern(angles)) {
+                                possibleMonitoringDetected();
+                            }
+                        }
+                    });
+                }
+
+                function calculateMovementAngles(movements) {
+                    const angles = [];
+                    for (let i = 1; i < movements.length; i++) {
+                        const dx = movements[i].x - movements[i-1].x;
+                        const dy = movements[i].y - movements[i-1].y;
+                        angles.push(Math.atan2(dy, dx));
+                    }
+                    return angles;
+                }
+
+                function isSuspiciousPattern(angles) {
+                    // Check for perfectly straight lines or right angles
+                    const tolerance = 0.1;
+                    return angles.some(angle => 
+                        Math.abs(angle % (Math.PI/2)) < tolerance || // Right angles
+                        Math.abs(angle % Math.PI) < tolerance // Straight lines
+                    );
+                }
+
+                // DOM manipulation protection
+                function protectDOM() {
+                    // Prevent monitoring scripts from modifying the DOM
+                    const originalCreateElement = document.createElement;
+                    document.createElement = function(tagName) {
+                        const element = originalCreateElement.call(document, tagName);
+                        
+                        // Monitor for suspicious attributes
+                        const originalSetAttribute = element.setAttribute;
+                        element.setAttribute = function(name, value) {
+                            if (name.includes('goguardian') || 
+                                name.includes('monitor') || 
+                                name.includes('teacher')) {
+                                possibleMonitoringDetected();
+                                return;
+                            }
+                            return originalSetAttribute.call(this, name, value);
+                        };
+                        
+                        return element;
+                    };
+                }
+
+                // Event listener protection
+                function protectEventListeners() {
+                    // Monitor for suspicious event listeners
+                    const originalAddEventListener = EventTarget.prototype.addEventListener;
+                    EventTarget.prototype.addEventListener = function(type, listener, options) {
+                        if (type.includes('goguardian') || 
+                            type.includes('monitor') || 
+                            type.includes('teacher')) {
+                            possibleMonitoringDetected();
+                            return;
+                        }
+                        return originalAddEventListener.call(this, type, listener, options);
+                    };
+                }
+
+                // Enhanced script detection
+                function detectMonitoringScripts() {
+                    // Check for script injection attempts
+                    const scripts = document.querySelectorAll('script');
+                    scripts.forEach(script => {
+                        if (script.src.includes('goguardian') || 
+                            script.src.includes('monitor') || 
+                            script.src.includes('teacher')) {
+                            possibleMonitoringDetected();
+                        }
+                    });
+                    
+                    // Monitor for script content changes
+                    const observer = new MutationObserver(mutations => {
+                        mutations.forEach(mutation => {
+                            if (mutation.type === 'childList' && mutation.addedNodes.length) {
+                                mutation.addedNodes.forEach(node => {
+                                    if (node.nodeName === 'SCRIPT') {
+                                        const content = node.textContent || '';
+                                        if (content.includes('goguardian') || 
+                                            content.includes('monitor') || 
+                                            content.includes('teacher')) {
+                                            possibleMonitoringDetected();
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                    });
+                    
+                    observer.observe(document.documentElement, {
+                        childList: true,
+                        subtree: true,
+                        characterData: true
+                    });
+                }
+
+                // Initialize all enhanced monitoring features
+                monitorNetworkRequests();
+                analyzeMouseMovements();
+                protectDOM();
+                protectEventListeners();
+                detectMonitoringScripts();
+            }
+
+            // Call the enhanced monitoring setup
+            setupEnhancedMonitoring();
         });
     </script>
 </body>
