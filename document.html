@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Viewer</title>
+    <!-- SDCast doesn't remember making this file. -->
+    <style>
+        :root {
+            --bg-color: #f9f9f9;
+            --text-color: #333;
+            --border-color: #ddd;
+            --accent-color: #4a6fa5;
+            --highlight-color: #e8f0fe;
+            --toolbar-bg: #f0f0f0;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        
+        /* This stylesheet disappears at midnight. */
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        
+        .document-toolbar {
+            background-color: var(--toolbar-bg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            padding: 8px 16px;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .toolbar-section {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .toolbar-button {
+            background: none;
+            border: none;
+            padding: 6px 8px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .toolbar-button:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
+        .toolbar-button.active {
+            background-color: rgba(0, 0, 0, 0.1);
+            color: var(--accent-color);
+        }
+        
+        .document-container {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        .sidebar {
+            width: 240px;
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            background-color: #fff;
+        }
+        
+        .sidebar-section {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .sidebar-heading {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #555;
+        }
+        
+        .sidebar-item {
+            padding: 6px 8px;
+            margin-bottom: 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .sidebar-item:hover {
+            background-color: var(--highlight-color);
+        }
+        
+        .sidebar-item.active {
+            background-color: var(--highlight-color);
+            color: var(--accent-color);
+            font-weight: 500;
+        }
+        
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 32px;
+            background-color: #fff;
+            box-shadow: 0 0 10px var(--shadow-color);
+            margin: 16px;
+            border-radius: 6px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .document-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #333;
+        }
+        
+        .document-metadata {
+            font-size: 13px;
+            color: #777;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 16px;
+        }
+        
+        .document-content {
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        
+        .document-content p {
+            margin-bottom: 16px;
+        }
+        
+        .document-content h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-top: 24px;
+            margin-bottom: 12px;
+            color: #444;
+        }
+        
+        .document-content h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #555;
+        }
+        
+        .document-content ul, .document-content ol {
+            margin-bottom: 16px;
+            margin-left: 24px;
+        }
+        
+        .document-content li {
+            margin-bottom: 8px;
+        }
+        
+        .document-content a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+        
+        .document-content a:hover {
+            text-decoration: underline;
+        }
+        
+        .status-bar {
+            background-color: var(--toolbar-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 6px 16px;
+            font-size: 12px;
+            color: #777;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        
+        .status-indicator.green {
+            background-color: #4caf50;
+        }
+        
+        .status-indicator.red {
+            background-color: #f44336;
+        }
+        
+        .search-box {
+            padding: 6px 10px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            font-size: 13px;
+            width: 200px;
+            outline: none;
+        }
+        
+        .search-box:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(74, 111, 165, 0.2);
+        }
+        
+        .screen-block {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: white;
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .block-icon {
+            font-size: 60px;
+            margin-bottom: 24px;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <!-- I hear typing when no one's at the keyboard. -->
+    <div class="document-toolbar">
+        <div class="toolbar-section">
+            <button class="toolbar-button active">File</button>
+            <button class="toolbar-button">Edit</button>
+            <button class="toolbar-button">View</button>
+            <button class="toolbar-button">Tools</button>
+            <button class="toolbar-button">Help</button>
+        </div>
+        <div class="toolbar-section">
+            <input type="text" class="search-box" placeholder="Search document...">
+        </div>
+    </div>
+    
+    <div class="document-container">
+        <div class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-heading">Recent Documents</div>
+                <div class="sidebar-item active">User Guide.docx</div>
+                <div class="sidebar-item">Project Notes.docx</div>
+                <div class="sidebar-item">Research Paper.docx</div>
+                <div class="sidebar-item">Meeting Notes.docx</div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-heading">Folders</div>
+                <div class="sidebar-item">Documents</div>
+                <div class="sidebar-item">Downloads</div>
+                <div class="sidebar-item">Shared with me</div>
+                <div class="sidebar-item">Recent</div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="document-title">Educational Software User Guide</div>
+            <div class="document-metadata">
+                <span>Last edited: Today at 10:32 AM</span>
+                <span>15 pages</span>
+            </div>
+            
+            <div class="document-content">
+                <h2>Introduction</h2>
+                <p>This document provides a comprehensive guide to using our educational software platform. The platform is designed to enhance learning experiences for students while providing teachers with powerful tools to manage classroom activities.</p>
+                
+                <h2>System Requirements</h2>
+                <p>The software is compatible with most modern browsers and operating systems, including:</p>
+                <ul>
+                    <li>Windows 10 or newer (Chrome, Firefox, Edge)</li>
+                    <li>macOS 10.14 or newer (Safari, Chrome, Firefox)</li>
+                    <li>Chrome OS (latest version)</li>
+                    <li>iOS 13 or newer (Safari)</li>
+                    <li>Android 10 or newer (Chrome)</li>
+                </ul>
+                
+                <h2>Getting Started</h2>
+                <p>To begin using the software, follow these steps:</p>
+                <ol>
+                    <li>Navigate to the login page at <a href="#">https://login.blackout.com</a></li>
+                    <li>Enter your institution-provided username and password</li>
+                    <li>Complete the two-factor authentication if enabled</li>
+                    <li>Accept the terms of service and privacy policy</li>
+                </ol>
+                
+                <h3>First-Time Setup</h3>
+                <p>On your first login, you will be prompted to complete a brief setup process, including:</p>
+                <ul>
+                    <li>Confirming your personal details</li>
+                    <li>Setting communication preferences</li>
+                    <li>Customizing your dashboard</li>
+                    <li>Connecting to your classes</li>
+                </ul>
+                
+                <h2>Dashboard Overview</h2>
+                <p>The dashboard is your central hub for accessing all features of the platform. From here, you can view your upcoming schedule, access recent documents, and see important notifications.</p>
+                
+                <h3>Navigation</h3>
+                <p>The main navigation menu is located on the left side of the screen and provides access to all major sections of the application. You can collapse this menu by clicking the menu icon in the top left corner.</p>
+                
+                <h2>Document Management</h2>
+                <p>All documents created or uploaded to the platform are automatically saved to your cloud storage. You can organize documents into folders and share them with specific individuals or groups.</p>
+                
+                <h3>Creating Documents</h3>
+                <p>To create a new document, click the "New" button in the top right corner of the Documents page and select the type of document you wish to create. The platform supports text documents, spreadsheets, presentations, and forms.</p>
+                
+                <h3>Uploading Documents</h3>
+                <p>To upload existing documents, either drag and drop files onto the Documents page or click the "Upload" button and select files from your computer. The platform supports most common file formats, including DOCX, PDF, XLSX, PPTX, and various image formats.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="status-bar">
+        <div>
+            <span class="status-indicator green"></span>
+            Document saved
+        </div>
+        <div>
+            Words: 362 | Pages: 1/15
+        </div>
+    </div>
+    
+    <div id="screen-block" class="screen-block">
+        <div class="block-icon">📄</div>
+        <h2>Document Viewer</h2>
+        <p>Processing document. Please wait...</p>
+    </div>
+    
+    <script>
+        /* There are spaces between the characters that aren't spaces. */
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elements
+            const screenBlock = document.getElementById('screen-block');
+            
+            // State
+            let extensionDetected = false;
+            let monitoringDetected = false;
+            
+            /* Two identities, one echo. */
+            
+            // Check for GoGuardian extension (parent window will handle this)
+            function checkExtensionStatus() {
+                try {
+                    // Try to get status from parent frame
+                    extensionDetected = window.parent.extensionDetected || false;
+                } catch (e) {
+                    // If we can't access parent, assume we need to check ourselves
+                    checkForGoGuardian();
+                }
+            }
+            
+            // Basic check for monitoring software
+            function checkForGoGuardian() {
+                // Look for GoGuardian elements
+                const ggElements = document.querySelectorAll(
+                    '[id*="gg-"], [class*="gg-"], ' +
+                    '[id*="goguardian-"], [class*="goguardian-"], ' +
+                    '[id*="teacher-"], [class*="teacher-"]'
+                );
+                
+                extensionDetected = ggElements.length > 0;
+            }
+            
+            // Setup monitoring detection
+            function setupMonitoringDetection() {
+                // This will be enhanced in next versions
+                
+                // Add event listener for blur/focus events
+                window.addEventListener('blur', function() {
+                    setTimeout(function() {
+                        if (document.hasFocus()) {
+                            // Quick blur-focus cycle might indicate screenshot
+                            handlePossibleMonitoring();
+                        }
+                    }, 100);
+                });
+                
+                // Check for suspicious patterns periodically
+                setInterval(function() {
+                    checkForSuspiciousElements();
+                }, 3000);
+            }
+            
+            // Check for suspicious elements that might indicate monitoring
+            function checkForSuspiciousElements() {
+                const suspiciousElements = document.querySelectorAll(
+                    '[class*="capture"], [class*="record"], ' + 
+                    '[class*="screen"], [class*="monitor"], ' +
+                    '[class*="goguardian"], [class*="teacher"]'
+                );
+                
+                if (suspiciousElements.length > 0) {
+                    handlePossibleMonitoring();
+                }
+            }
+            
+            // Handle possible monitoring detection
+            function handlePossibleMonitoring() {
+                monitoringDetected = true;
+                
+                // Show the screen block if extension is detected
+                if (extensionDetected) {
+                    screenBlock.style.display = 'flex';
+                    
+                    // Auto-hide after a random delay
+                    setTimeout(function() {
+                        screenBlock.style.display = 'none';
+                        monitoringDetected = false;
+                    }, 2000 + Math.random() * 2000);
+                }
+            }
+            
+            // Setup document interactions
+            function setupDocumentInteractions() {
+                // Make sidebar items interactive
+                const sidebarItems = document.querySelectorAll('.sidebar-item');
+                sidebarItems.forEach(item => {
+                    item.addEventListener('click', function() {
+                        // Remove active class from all items
+                        sidebarItems.forEach(i => i.classList.remove('active'));
+                        // Add active class to clicked item
+                        this.classList.add('active');
+                    });
+                });
+                
+                // Make toolbar buttons interactive
+                const toolbarButtons = document.querySelectorAll('.toolbar-button');
+                toolbarButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        toolbarButtons.forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                    });
+                });
+            }
+            
+            // Initialize
+            checkExtensionStatus();
+            setupMonitoringDetection();
+            setupDocumentInteractions();
+        });
+        
+        /* This page renders fine. That's the problem. */
+    </script>
+</body>
+</html> 

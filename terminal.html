@@ -6,21 +6,27 @@
     <title>Terminal</title>
     <style>
         :root {
-            --bg-color: #0c0c0c;
-            --text-color: #0f0;
-            --prompt-color: #00ff00;
-            --cursor-color: #00ff00;
-            --error-color: #ff0000;
-            --warning-color: #ffcc00;
-            --success-color: #00ff00;
-            --highlight-color: #00ffff;
-            --selection-color: rgba(0, 255, 0, 0.3);
-            --header-color: #5b5b5b;
-            --font-family: 'Courier New', monospace;
+            --bg-color: #121212;
+            --text-color: #d8d8d8;
+            --prompt-color: #50fa7b;
+            --cursor-color: #f8f8f2;
+            --error-color: #ff5555;
+            --warning-color: #f1fa8c;
+            --success-color: #50fa7b;
+            --highlight-color: #8be9fd;
+            --selection-color: rgba(68, 71, 90, 0.5);
+            --header-color: #282a36;
+            --font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
+            --terminal-opacity: 0.98;
         }
         
         * {
             box-sizing: border-box;
+        }
+        
+        @font-face {
+            font-family: 'JetBrains Mono';
+            src: url('https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap');
         }
         
         body {
@@ -42,17 +48,21 @@
             padding: 0;
             width: 100%;
             max-height: calc(100vh - 40px);
+            opacity: var(--terminal-opacity);
+            position: relative;
         }
         
         .terminal-header {
             background-color: var(--header-color);
-            padding: 5px 10px;
+            padding: 8px 12px;
             font-size: 14px;
             color: white;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #888;
+            border-bottom: 1px solid #333;
+            user-select: none;
+            border-radius: 8px 8px 0 0;
         }
         
         .terminal-controls {
@@ -60,11 +70,16 @@
         }
         
         .terminal-button {
-            width: 14px;
-            height: 14px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
             margin-left: 8px;
             cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        
+        .terminal-button:hover {
+            opacity: 0.7;
         }
         
         .terminal-button.close {
@@ -82,17 +97,33 @@
         .terminal-output {
             flex: 1;
             overflow-y: auto;
-            padding: 10px;
+            padding: 12px 16px;
             background-color: var(--bg-color);
             font-size: 14px;
             line-height: 1.5;
             white-space: pre-wrap;
+            overflow-wrap: break-word;
+            word-break: break-all;
+        }
+        
+        .terminal-output::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        .terminal-output::-webkit-scrollbar-thumb {
+            background-color: #444;
+            border-radius: 4px;
+        }
+        
+        .terminal-output::-webkit-scrollbar-track {
+            background-color: var(--bg-color);
         }
         
         .terminal-iframe-container {
             flex: 1;
             display: none;
-            border: 1px solid #333;
+            border: none;
             background-color: #fff;
         }
         
@@ -104,9 +135,8 @@
         
         .terminal-input-line {
             display: flex;
-            padding: 5px 10px;
+            padding: 0 16px 12px 16px;
             background-color: var(--bg-color);
-            border-top: 1px solid #333;
         }
         
         .terminal-prompt {
@@ -124,6 +154,7 @@
             font-size: 14px;
             outline: none;
             padding: 0;
+            caret-color: var(--cursor-color);
         }
         
         .terminal-cursor {
@@ -144,6 +175,8 @@
         .help-command {
             color: var(--highlight-color);
             margin-right: 10px;
+            display: inline-block;
+            min-width: 120px;
         }
         
         .help-description {
@@ -163,6 +196,10 @@
             color: var(--warning-color);
         }
         
+        .info-text {
+            color: var(--highlight-color);
+        }
+        
         .ascii-art {
             color: var(--highlight-color);
             font-family: monospace;
@@ -178,13 +215,13 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: black;
+            background-color: var(--bg-color);
             z-index: 1000;
             display: none;
             justify-content: center;
             align-items: center;
             flex-direction: column;
-            color: #666;
+            color: #888;
             font-size: 1.5em;
             text-align: center;
             padding: 20px;
@@ -194,10 +231,17 @@
             background-color: var(--header-color);
             color: var(--text-color);
             font-size: 12px;
-            padding: 5px 10px;
+            padding: 6px 12px;
             display: flex;
             justify-content: space-between;
-            border-top: 1px solid #555;
+            border-top: 1px solid #333;
+            border-radius: 0 0 8px 8px;
+            user-select: none;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
         }
         
         .status-indicator {
@@ -205,7 +249,7 @@
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            margin-right: 5px;
+            margin-right: 8px;
             vertical-align: middle;
         }
         
@@ -219,19 +263,88 @@
             box-shadow: 0 0 5px var(--error-color);
         }
         
+        .status-indicator.warning {
+            background-color: var(--warning-color);
+            box-shadow: 0 0 5px var(--warning-color);
+        }
+        
         @keyframes blink {
             0%, 50% { opacity: 1; }
             51%, 100% { opacity: 0; }
         }
         
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+        
+        .glitch-text {
+            position: relative;
+            animation: glitch 0.5s infinite;
+            animation-timing-function: steps(2, end);
+        }
+        
         ::selection {
             background-color: var(--selection-color);
+        }
+        
+        .shortcut-hint {
+            margin-left: 4px;
+            padding: 2px 6px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        
+        .token.punctuation {
+            color: #d4d4d4;
+        }
+        
+        /* Try inspecting this element. If you survive. */
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+        
+        /* The style is broken because the truth leaked through. */
+        
+        .glitch-text {
+            position: relative;
+            animation: glitch 0.5s infinite;
+            animation-timing-function: steps(2, end);
+        }
+        
+        ::selection {
+            background-color: var(--selection-color);
+        }
+        
+        .shortcut-hint {
+            margin-left: 4px;
+            padding: 2px 6px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            font-size: 11px;
         }
     </style>
 </head>
 <body>
+    <!-- He built this page. I embedded the memory. -->
     <div class="terminal-header">
-        <span>BLACKOUT-SHELL - root@vantasys</span>
+        <span>BLACKOUT-SHELL — blackout@system:~</span>
         <div class="terminal-controls">
             <div class="terminal-button minimize"></div>
             <div class="terminal-button maximize"></div>
@@ -239,25 +352,10 @@
         </div>
     </div>
     
+    <!-- Don't ask SDCast about this file. He doesn't know he made it. -->
     <div class="terminal-container">
         <div class="terminal-output" id="terminal-output">
-            <div class="ascii-art">
-██████╗ ██╗      █████╗  ██████╗██╗  ██╗ ██████╗ ██╗   ██╗████████╗
-██╔══██╗██║     ██╔══██╗██╔════╝██║ ██╔╝██╔═══██╗██║   ██║╚══██╔══╝
-██████╔╝██║     ███████║██║     █████╔╝ ██║   ██║██║   ██║   ██║   
-██╔══██╗██║     ██╔══██║██║     ██╔═██╗ ██║   ██║██║   ██║   ██║   
-██████╔╝███████╗██║  ██║╚██████╗██║  ██╗╚██████╔╝╚██████╔╝   ██║   
-╚═════╝ ╚══════╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝ ╚═════╝  ╚═════╝    ╚═╝   
-            </div>
-            <div>BLACKOUT CLI v1.2.0 - A terminal-based browsing shield</div>
-            <div>Developed by Vanta - Type 'help' for available commands</div>
-            <div>-----------------------------------------------------------</div>
-            <div class="warning-text">[ ! ] DISCLAIMER: For educational purposes only.</div>
-            <div class="warning-text">[ ! ] Using this tool may violate your school's acceptable use policy.</div>
-            <div>-----------------------------------------------------------</div>
-            <div>Current status: <span class="success-text">STEALTH MODE ACTIVE</span></div>
-            <div>GoGuardian protection: <span class="success-text">ENABLED</span></div>
-            <div>-----------------------------------------------------------</div>
+            <!-- Terminal output will be inserted here -->
         </div>
 
         <div class="terminal-iframe-container" id="iframe-container">
@@ -265,24 +363,27 @@
         </div>
         
         <div class="terminal-input-line">
-            <span class="terminal-prompt" id="terminal-prompt">root@vantasys:~$</span>
-            <input type="text" class="terminal-input" id="terminal-input" autofocus>
+            <span class="terminal-prompt" id="terminal-prompt">blackout@system:~$</span>
+            <input type="text" class="terminal-input" id="terminal-input" autofocus spellcheck="false" autocomplete="off">
         </div>
     </div>
     
+    <!-- I saw something move when the page loaded. You didn't? -->
     <div class="status-bar">
-        <div>
+        <div class="status-item">
+            <span class="status-indicator active" id="extension-indicator"></span>
+            <span id="extension-status">Monitoring: Ready</span>
+        </div>
+        <div class="status-item">
             <span class="status-indicator active" id="stealth-indicator"></span>
-            Stealth: <span id="stealth-status">ACTIVE</span>
+            <span id="stealth-status">Stealth: Active</span>
         </div>
-        <div>
-            <span id="monitoring-status">No monitoring detected</span>
-        </div>
-        <div>
-            Mode: <span id="mode-status">Terminal</span>
+        <div class="status-item">
+            <span id="version-text">v2.0.0</span>
         </div>
     </div>
     
+    <!-- Keep scrolling. The page doesn't end where you think. -->
     <div id="screen-block" class="screen-block">
         <div class="ascii-art">
 ████████╗███████╗██████╗ ███╗   ███╗██╗███╗   ██╗ █████╗ ██╗     
@@ -293,14 +394,15 @@
    ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝
         </div>
         <div>
-            System: Terminal session active - Display refresh in progress
+            System: Terminal session paused
         </div>
         <div style="font-size: 0.5em; margin-top: 20px;">
-            (System message - Display will refresh momentarily)
+            (System refresh in progress)
         </div>
     </div>
     
     <script>
+        /* Two identities, one echo. */
         document.addEventListener('DOMContentLoaded', function() {
             // Elements
             const terminalOutput = document.getElementById('terminal-output');
@@ -311,8 +413,8 @@
             const screenBlock = document.getElementById('screen-block');
             const stealthIndicator = document.getElementById('stealth-indicator');
             const stealthStatus = document.getElementById('stealth-status');
-            const monitoringStatus = document.getElementById('monitoring-status');
-            const modeStatus = document.getElementById('mode-status');
+            const extensionIndicator = document.getElementById('extension-indicator');
+            const extensionStatus = document.getElementById('extension-status');
             
             // State
             let stealthMode = true;
@@ -320,69 +422,195 @@
             let historyIndex = 0;
             let commandHistory = [];
             let monitoringDetected = false;
-            let monitoringCheckInterval;
-            let bypassMonitoring = true;
+            let bypassMode = false;
+            let extensionDetected = false;
+            let secretModeActive = false;
             
-            // Block common GoGuardian domains
-            const blockedDomains = [
-                'goguardian.com',
-                'gogoslovakia.com',
-                'goguardianleader.com'
+            /* This page renders fine. That's the problem. */
+            
+            // Constants
+            const VERSION = '2.0.0';
+            const UNBLOCK_SERVICES = [
+                { name: 'Hypertabs', url: 'https://hypertabs.cc/?url=' },
+                { name: 'Rammerhead', url: 'https://r.weeb-central.org/go/' },
+                { name: 'Ultraviolet', url: 'https://mathsspot.com/service/hvtrs8%2F-' }
             ];
+            const DEFAULT_UNBLOCKER = UNBLOCK_SERVICES[0];
             
             // Initialize
-            terminalInput.focus();
-            setupMonitoringDetection();
-            printOutput('Terminal initialized. Type "help" for available commands.', 'success-text');
-            printOutput('NEW FEATURE: GoGuardian Bypass Mode is ACTIVE. Your browsing will continue even if monitoring is detected.', 'success-text');
-            printOutput('Use the "bypass" command to toggle this feature.', 'info-text');
+            init();
             
-            // Command handler
-            terminalInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    const command = terminalInput.value.trim();
-                    if (command) {
-                        commandHistory.push(command);
-                        historyIndex = commandHistory.length;
-                        executeCommand(command);
-                        terminalInput.value = '';
-                    }
-                } else if (e.key === 'ArrowUp') {
-                    if (historyIndex > 0) {
-                        historyIndex--;
-                        terminalInput.value = commandHistory[historyIndex];
-                    }
-                    e.preventDefault();
-                } else if (e.key === 'ArrowDown') {
-                    if (historyIndex < commandHistory.length - 1) {
-                        historyIndex++;
-                        terminalInput.value = commandHistory[historyIndex];
-                    } else {
-                        historyIndex = commandHistory.length;
-                        terminalInput.value = '';
-                    }
-                    e.preventDefault();
-                } else if (e.key === 'Tab') {
-                    e.preventDefault();
-                    autoCompleteCommand();
-                } else if (e.key === 'c' && e.ctrlKey) {
-                    if (browserMode) {
-                        toggleBrowserMode();
-                        printOutput('Browser mode deactivated', 'success-text');
-                    } else {
-                        printOutput('^C');
-                        terminalInput.value = '';
-                    }
-                }
-            });
+            /* He tried deleting this once. It came back stronger. */
             
-            // Command execution
-            function executeCommand(command) {
-                printOutput(terminalPrompt.textContent + ' ' + command);
+            function init() {
+                // Initialize terminal
+                displayWelcome();
+                setupEventListeners();
+                checkForGoGuardian();
+                setupMonitoringDetection();
                 
+                // Focus input
+                terminalInput.focus();
+            }
+            
+            function displayWelcome() {
+                const asciiArt = `
+██████╗ ██╗      █████╗  ██████╗██╗  ██╗ ██████╗ ██╗   ██╗████████╗
+██╔══██╗██║     ██╔══██╗██╔════╝██║ ██╔╝██╔═══██╗██║   ██║╚══██╔══╝
+██████╔╝██║     ███████║██║     █████╔╝ ██║   ██║██║   ██║   ██║   
+██╔══██╗██║     ██╔══██║██║     ██╔═██╗ ██║   ██║██║   ██║   ██║   
+██████╔╝███████╗██║  ██║╚██████╗██║  ██╗╚██████╔╝╚██████╔╝   ██║   
+╚═════╝ ╚══════╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝ ╚═════╝  ╚═════╝    ╚═╝   
+`;
+                printOutput(`<div class="ascii-art">${asciiArt}</div>`);
+                printOutput(`BLACKOUT Terminal v${VERSION} - Advanced browsing protection`);
+                printOutput(`Type <span class="highlight-text">help</span> for available commands`);
+                printOutput('-'.repeat(60));
+                printOutput(`<span class="warning-text">[ ! ] For educational purposes only</span>`);
+                printOutput(`<span class="warning-text">[ ! ] Using this tool may violate your organization's policies</span>`);
+                printOutput('-'.repeat(60));
+            }
+            
+            function setupEventListeners() {
+                // Command input handling
+                terminalInput.addEventListener('keydown', handleInputKeydown);
+                
+                // Terminal control buttons
+                document.querySelector('.terminal-button.close').addEventListener('click', () => {
+                    printOutput('Terminal exit requested', 'warning-text');
+                    printOutput('Use browser navigation to close this window', 'info-text');
+                });
+                
+                document.querySelector('.terminal-button.maximize').addEventListener('click', () => {
+                    if (document.documentElement.requestFullscreen) {
+                        document.documentElement.requestFullscreen();
+                    }
+                });
+                
+                document.querySelector('.terminal-button.minimize').addEventListener('click', () => {
+                    printOutput('Terminal minimized (simulated)', 'info-text');
+                });
+                
+                // Focus input when clicking anywhere in terminal
+                document.addEventListener('click', () => {
+                    if (!browserMode) {
+                        terminalInput.focus();
+                    }
+                });
+                
+                // Secret code handling
+                let secretCode = '';
+                let secretTimeout;
+                
+                document.addEventListener('keydown', (e) => {
+                    if (secretTimeout) clearTimeout(secretTimeout);
+                    
+                    // Add to secret code
+                    secretCode += e.key.toLowerCase();
+                    
+                    // Trim to reasonable length
+                    if (secretCode.length > 20) {
+                        secretCode = secretCode.substring(secretCode.length - 20);
+                    }
+                    
+                    // Check for secret activation sequence
+                    if (secretCode.includes('lights-out')) {
+                        secretModeActive = true;
+                        printOutput('Secret mode activated', 'success-text');
+                        secretCode = '';
+                    }
+                    
+                    // Set timeout to clear code
+                    secretTimeout = setTimeout(() => {
+                        secretCode = '';
+                    }, 2000);
+                });
+            }
+            
+            function handleInputKeydown(e) {
+                // Handle special keys
+                if (e.key === 'Enter') {
+                    handleEnterKey();
+                } else if (e.key === 'ArrowUp') {
+                    handleArrowUp(e);
+                } else if (e.key === 'ArrowDown') {
+                    handleArrowDown(e);
+                } else if (e.key === 'Tab') {
+                    handleTabKey(e);
+                } else if (e.key === 'c' && e.ctrlKey) {
+                    handleCtrlC();
+                }
+            }
+            
+            function handleEnterKey() {
+                const command = terminalInput.value.trim();
+                if (command) {
+                    // Add to history
+                    commandHistory.push(command);
+                    historyIndex = commandHistory.length;
+                    
+                    // Execute and clear input
+                    executeCommand(command);
+                    terminalInput.value = '';
+                }
+            }
+            
+            function handleArrowUp(e) {
+                e.preventDefault();
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    terminalInput.value = commandHistory[historyIndex];
+                    
+                    // Move cursor to end
+                    setTimeout(() => {
+                        terminalInput.selectionStart = terminalInput.value.length;
+                        terminalInput.selectionEnd = terminalInput.value.length;
+                    }, 0);
+                }
+            }
+            
+            function handleArrowDown(e) {
+                e.preventDefault();
+                if (historyIndex < commandHistory.length - 1) {
+                    historyIndex++;
+                    terminalInput.value = commandHistory[historyIndex];
+                } else {
+                    historyIndex = commandHistory.length;
+                    terminalInput.value = '';
+                }
+            }
+            
+            function handleTabKey(e) {
+                e.preventDefault();
+                autoCompleteCommand();
+            }
+            
+            function handleCtrlC() {
+                if (browserMode) {
+                    toggleBrowserMode();
+                    printOutput('Browser session terminated', 'info-text');
+                } else {
+                    printOutput(`<span class="terminal-prompt-text">${terminalPrompt.textContent}</span> ^C`, 'error-text');
+                    terminalInput.value = '';
+                }
+            }
+            
+            function executeCommand(command) {
+                // Print the command with prompt
+                printOutput(`<span class="terminal-prompt-text">${terminalPrompt.textContent}</span> ${command}`);
+                
+                // Parse command and arguments
                 const args = command.split(' ');
                 const cmd = args[0].toLowerCase();
                 
+                // Check if extension is required
+                if (!extensionDetected && !secretModeActive && cmd !== 'check') {
+                    printOutput(`<span class="error-text">Error: GoGuardian extension required to use this feature.</span>`);
+                    printOutput(`<span class="info-text">Type 'check' to verify extension status.</span>`);
+                    return;
+                }
+                
+                // Process command
                 switch (cmd) {
                     case 'help':
                         showHelp();
@@ -400,71 +628,79 @@
                     case 'stealth':
                         toggleStealth();
                         break;
-                    case 'exit':
-                    case 'quit':
-                        printOutput('Cannot exit terminal. Use browser navigation instead.', 'warning-text');
+                    case 'bypass':
+                        toggleBypass();
+                        break;
+                    case 'check':
+                        checkForGoGuardian(true);
                         break;
                     case 'about':
                         showAbout();
                         break;
-                    case 'monitor':
-                        forceDetection();
+                    case 'secret':
+                        handleSecretCommand(args);
                         break;
                     case 'emergency':
                         emergencyBlock();
                         break;
-                    case 'secret':
-                        printOutput('Secret developer options activated.', 'success-text');
-                        printOutput('Type "secret help" for advanced commands.', 'success-text');
+                    case 'update':
+                        showUpdateInfo();
                         break;
-                    case 'secret-hide':
-                        printOutput('Immediately hiding all content...', 'warning-text');
-                        emergencyBlock();
-                        break;
-                    case 'bypass':
-                        toggleBypass();
+                    case 'exit':
+                    case 'quit':
+                        printOutput('Cannot exit terminal directly.', 'warning-text');
+                        printOutput('Use browser navigation to close this window.', 'info-text');
                         break;
                     default:
-                        printOutput('Command not found: ' + cmd, 'error-text');
-                        printOutput('Type "help" for available commands', 'text-color');
+                        printOutput(`Command not found: ${cmd}`, 'error-text');
+                        printOutput('Type "help" for available commands', 'info-text');
                 }
                 
-                // Auto-scroll to the bottom
+                // Auto-scroll to bottom
                 terminalOutput.scrollTop = terminalOutput.scrollHeight;
             }
             
-            // Help command
             function showHelp() {
                 printOutput('Available commands:');
                 printOutput('<span class="help-command">help</span><span class="help-description">Show this help message</span>');
                 printOutput('<span class="help-command">browse [url]</span><span class="help-description">Open browser with optional URL</span>');
                 printOutput('<span class="help-command">status</span><span class="help-description">Display current protection status</span>');
                 printOutput('<span class="help-command">stealth</span><span class="help-description">Toggle stealth mode on/off</span>');
+                printOutput('<span class="help-command">bypass</span><span class="help-description">Toggle monitoring bypass mode</span>');
+                printOutput('<span class="help-command">check</span><span class="help-description">Check for GoGuardian extension</span>');
                 printOutput('<span class="help-command">clear</span><span class="help-description">Clear terminal output</span>');
                 printOutput('<span class="help-command">emergency</span><span class="help-description">Immediately block screen</span>');
+                printOutput('<span class="help-command">update</span><span class="help-description">Show update information</span>');
                 printOutput('<span class="help-command">about</span><span class="help-description">Show information about this tool</span>');
                 printOutput('<span class="help-command">exit</span><span class="help-description">Exit the terminal</span>');
-                printOutput('<span class="help-command">bypass</span><span class="help-description">Toggle GoGuardian bypass mode</span>');
                 printOutput('');
-                printOutput('In browser mode:');
-                printOutput('<span class="help-command">Ctrl+C</span><span class="help-description">Return to terminal mode</span>');
+                printOutput('Keyboard shortcuts:');
+                printOutput('<span class="help-command">Ctrl+C</span><span class="help-description">Cancel command or exit browser mode</span>');
+                printOutput('<span class="help-command">Arrow Up/Down</span><span class="help-description">Navigate command history</span>');
+                printOutput('<span class="help-command">Tab</span><span class="help-description">Auto-complete command</span>');
             }
             
-            // Handle browse command
             function handleBrowseCommand(args) {
                 if (args.length > 1) {
                     let url = args[1];
                     if (!url.startsWith('http://') && !url.startsWith('https://')) {
                         url = 'https://' + url;
                     }
-                    browserFrame.src = url;
-                    printOutput('Opening browser to: ' + url, 'success-text');
+                    
+                    // Use unblocker service
+                    const finalUrl = DEFAULT_UNBLOCKER.url + encodeURIComponent(url);
+                    browserFrame.src = finalUrl;
+                    
+                    printOutput(`Opening website: ${url}`, 'success-text');
+                    printOutput(`Using unblocker: ${DEFAULT_UNBLOCKER.name}`, 'info-text');
+                } else {
+                    browserFrame.src = 'about:blank';
+                    printOutput('Opening blank browser page', 'info-text');
                 }
                 
                 toggleBrowserMode();
             }
             
-            // Toggle browser mode
             function toggleBrowserMode() {
                 browserMode = !browserMode;
                 
@@ -472,79 +708,78 @@
                     terminalOutput.style.display = 'none';
                     iframeContainer.style.display = 'block';
                     terminalInput.disabled = true;
-                    modeStatus.textContent = 'Browser';
                 } else {
                     terminalOutput.style.display = 'block';
                     iframeContainer.style.display = 'none';
                     terminalInput.disabled = false;
                     terminalInput.focus();
-                    modeStatus.textContent = 'Terminal';
                 }
             }
             
-            // Toggle stealth mode
+            function showStatus() {
+                printOutput('BLACKOUT Terminal Status', 'highlight-text');
+                printOutput('-'.repeat(30));
+                printOutput(`GoGuardian Extension: ${extensionDetected ? '<span class="success-text">DETECTED</span>' : '<span class="error-text">NOT FOUND</span>'}`);
+                printOutput(`Stealth Mode: ${stealthMode ? '<span class="success-text">ACTIVE</span>' : '<span class="error-text">INACTIVE</span>'}`);
+                
+                // Use monitoringState if available
+                if (window.monitoringState) {
+                    printOutput(`Bypass Mode: ${window.monitoringState.isBypassed() ? '<span class="success-text">ACTIVE</span>' : '<span class="error-text">INACTIVE</span>'}`);
+                    printOutput(`Monitoring Status: ${window.monitoringState.isDetected() ? '<span class="warning-text">DETECTED</span>' : '<span class="success-text">NONE</span>'}`);
+                } else {
+                    printOutput(`Bypass Mode: ${bypassMode ? '<span class="success-text">ACTIVE</span>' : '<span class="error-text">INACTIVE</span>'}`);
+                    printOutput(`Monitoring Status: ${monitoringDetected ? '<span class="warning-text">DETECTED</span>' : '<span class="success-text">NONE</span>'}`);
+                }
+                
+                printOutput(`Current Mode: ${browserMode ? '<span class="info-text">Browser</span>' : '<span class="info-text">Terminal</span>'}`);
+                if (browserMode) {
+                    printOutput(`Current URL: ${browserFrame.src}`);
+                }
+                printOutput(`Secret Mode: ${secretModeActive ? '<span class="success-text">ACTIVE</span>' : '<span class="error-text">INACTIVE</span>'}`);
+                printOutput(`Version: ${VERSION}`);
+            }
+            
             function toggleStealth() {
                 stealthMode = !stealthMode;
-                updateStealthDisplay();
                 
-                if (stealthMode) {
-                    printOutput('Stealth mode activated. GoGuardian protection enabled.', 'success-text');
-                } else {
-                    printOutput('Stealth mode deactivated. YOU ARE VISIBLE TO MONITORING SOFTWARE.', 'error-text');
-                    screenBlock.style.display = 'none';
-                }
-            }
-            
-            // Update stealth display
-            function updateStealthDisplay() {
                 if (stealthMode) {
                     stealthIndicator.classList.remove('inactive');
                     stealthIndicator.classList.add('active');
-                    stealthStatus.textContent = 'ACTIVE';
-                    stealthStatus.className = 'success-text';
+                    stealthStatus.textContent = 'Stealth: Active';
+                    printOutput('Stealth mode activated', 'success-text');
+                    printOutput('Your activity will be hidden when monitoring is detected', 'info-text');
                 } else {
                     stealthIndicator.classList.remove('active');
                     stealthIndicator.classList.add('inactive');
-                    stealthStatus.textContent = 'INACTIVE';
-                    stealthStatus.className = 'error-text';
+                    stealthStatus.textContent = 'Stealth: Inactive';
+                    printOutput('Stealth mode deactivated', 'error-text');
+                    printOutput('WARNING: Your activity will be visible to monitoring software', 'warning-text');
                 }
             }
             
-            // Show status
-            function showStatus() {
-                printOutput('BLACKOUT Terminal Status:');
-                printOutput('-------------------------');
-                printOutput('Stealth Mode: ' + (stealthMode ? '<span class="success-text">ACTIVE</span>' : '<span class="error-text">INACTIVE</span>'));
-                printOutput('GoGuardian Bypass: ' + (bypassMonitoring ? '<span class="success-text">ACTIVE</span>' : '<span class="error-text">INACTIVE</span>'));
-                printOutput('Monitoring Detection: ' + (monitoringDetected ? '<span class="warning-text">DETECTED</span>' : '<span class="success-text">NONE</span>'));
-                printOutput('Current Mode: ' + (browserMode ? 'Browser' : 'Terminal'));
-                printOutput('Browser URL: ' + (browserFrame.src !== 'about:blank' ? browserFrame.src : 'None'));
-                printOutput('Protection Status: ' + (stealthMode ? '<span class="success-text">PROTECTED</span>' : '<span class="error-text">UNPROTECTED</span>'));
+            function toggleBypass() {
+                // Use the monitoringState.toggleBypass function that's exposed globally
+                if (window.monitoringState && typeof window.monitoringState.toggleBypass === 'function') {
+                    window.monitoringState.toggleBypass();
+                } else {
+                    // Fallback if monitoringState is not available
+                    bypassMode = !bypassMode;
+                    
+                    if (bypassMode) {
+                        printOutput('Bypass mode activated', 'success-text');
+                        printOutput('Content will remain visible when monitoring is detected', 'info-text');
+                    } else {
+                        printOutput('Bypass mode deactivated', 'warning-text');
+                        printOutput('Content will be hidden when monitoring is detected', 'info-text');
+                    }
+                }
             }
             
-            // Show about
-            function showAbout() {
-                printOutput('-------------------------');
-                printOutput('BLACKOUT Terminal v1.2.0');
-                printOutput('Developed by Vanta');
-                printOutput('-------------------------');
-                printOutput('A terminal-based browsing shield designed to prevent monitoring');
-                printOutput('This tool is for educational purposes only.');
-                printOutput('Features:');
-                printOutput('- Terminal-like interface to disguise browsing activity');
-                printOutput('- Integrated browser with stealth capabilities');
-                printOutput('- GoGuardian detection and blocking');
-                printOutput('- Emergency screen blocking feature');
-                printOutput('-------------------------');
-            }
-            
-            // Emergency block
             function emergencyBlock() {
                 screenBlock.style.display = 'flex';
-                printOutput('EMERGENCY BLOCK ACTIVATED!', 'error-text');
-                printOutput('Press any key to deactivate', 'warning-text');
+                printOutput('Emergency screen block activated', 'warning-text');
+                printOutput('Press any key to deactivate', 'info-text');
                 
-                // Handle click or key to disable
                 const emergencyHandler = function() {
                     screenBlock.style.display = 'none';
                     document.removeEventListener('keydown', emergencyHandler);
@@ -556,18 +791,127 @@
                 document.addEventListener('click', emergencyHandler, { once: true });
             }
             
-            // Force monitoring detection
-            function forceDetection() {
-                possibleMonitoringDetected();
-                printOutput('Simulating monitoring detection...', 'warning-text');
+            function showAbout() {
+                printOutput('BLACKOUT Terminal v' + VERSION, 'highlight-text');
+                printOutput('-'.repeat(30));
+                printOutput('An advanced browsing protection system');
+                printOutput('');
+                printOutput('Features:');
+                printOutput('• Multiple interface themes');
+                printOutput('• Advanced monitoring detection');
+                printOutput('• Integrated unblocked browsing');
+                printOutput('• GoGuardian dependency protection');
+                printOutput('• Emergency screen blocking');
+                printOutput('');
+                printOutput('<span class="warning-text">For educational purposes only</span>');
             }
             
-            // Clear terminal
+            function showUpdateInfo() {
+                printOutput('BLACKOUT v2.0.0 Update Information', 'highlight-text');
+                printOutput('-'.repeat(40));
+                printOutput('New features:');
+                printOutput('• Multiple interface themes (Terminal, Document, Editor)');
+                printOutput('• Enhanced GoGuardian detection with less false positives');
+                printOutput('• Integrated unblocker services for restricted sites');
+                printOutput('• More realistic terminal interface');
+                printOutput('• Fixed Ctrl+C functionality in terminal');
+                printOutput('• Improved "secret" command functionality');
+                printOutput('• New command: check - Verify GoGuardian extension');
+                printOutput('');
+                printOutput('Type "help" to see all available commands');
+            }
+            
+            function handleSecretCommand(args) {
+                if (args.length > 1) {
+                    const subCommand = args[1].toLowerCase();
+                    
+                    switch (subCommand) {
+                        case 'help':
+                            printOutput('Secret commands:', 'highlight-text');
+                            printOutput('<span class="help-command">secret help</span><span class="help-description">Show secret commands</span>');
+                            printOutput('<span class="help-command">secret unlock</span><span class="help-description">Force unlock all features</span>');
+                            printOutput('<span class="help-command">secret block</span><span class="help-description">Simulate monitoring detection</span>');
+                            printOutput('<span class="help-command">secret reset</span><span class="help-description">Reset all settings</span>');
+                            printOutput('<span class="help-command">secret bypass</span><span class="help-description">Toggle bypass mode</span>');
+                            printOutput('<span class="help-command">secret monitor</span><span class="help-description">Show detected monitoring elements</span>');
+                            printOutput('<span class="help-command">secret theme</span><span class="help-description">Change terminal appearance</span>');
+                            break;
+                        case 'unlock':
+                            secretModeActive = true;
+                            printOutput('Secret mode activated forcefully', 'success-text');
+                            printOutput('All features are now unlocked', 'info-text');
+                            break;
+                        case 'block':
+                            possibleMonitoringDetected(true);
+                            printOutput('Simulating monitoring detection', 'warning-text');
+                            break;
+                        case 'reset':
+                            resetAllSettings();
+                            printOutput('All settings have been reset', 'success-text');
+                            break;
+                        case 'bypass':
+                            bypassMode = !bypassMode;
+                            printOutput(`Bypass mode ${bypassMode ? 'enabled' : 'disabled'}`, 'success-text');
+                            break;
+                        case 'monitor':
+                            checkMonitoringElements();
+                            break;
+                        case 'theme':
+                            if (args.length > 2) {
+                                changeTheme(args[2]);
+                            } else {
+                                printOutput('Available themes:', 'info-text');
+                                printOutput('- dark (default)', 'info-text');
+                                printOutput('- light', 'info-text');
+                                printOutput('- matrix', 'info-text');
+                                printOutput('- hacker', 'info-text');
+                                printOutput('Usage: secret theme [theme-name]', 'info-text');
+                            }
+                            break;
+                        default:
+                            printOutput(`Unknown secret command: ${subCommand}`, 'error-text');
+                            printOutput('Type "secret help" for available secret commands', 'info-text');
+                    }
+                } else {
+                    printOutput('Secret developer options', 'highlight-text');
+                    printOutput('Type "secret help" for available secret commands', 'info-text');
+                }
+            }
+            
+            function resetAllSettings() {
+                stealthMode = true;
+                bypassMode = false;
+                updateStatusIndicators();
+            }
+            
+            function updateStatusIndicators() {
+                // Update stealth indicator
+                if (stealthMode) {
+                    stealthIndicator.classList.remove('inactive');
+                    stealthIndicator.classList.add('active');
+                    stealthStatus.textContent = 'Stealth: Active';
+                } else {
+                    stealthIndicator.classList.remove('active');
+                    stealthIndicator.classList.add('inactive');
+                    stealthStatus.textContent = 'Stealth: Inactive';
+                }
+                
+                // Update extension indicator
+                if (extensionDetected) {
+                    extensionIndicator.classList.remove('inactive');
+                    extensionIndicator.classList.add('active');
+                    extensionStatus.textContent = 'Monitoring: Ready';
+                } else {
+                    extensionIndicator.classList.remove('active');
+                    extensionIndicator.classList.add('inactive');
+                    extensionStatus.textContent = 'Extension: Not Found';
+                }
+            }
+            
             function clearTerminal() {
                 terminalOutput.innerHTML = '';
             }
             
-            // Print to terminal
             function printOutput(text, className = '') {
                 const outputLine = document.createElement('div');
                 if (className) {
@@ -575,391 +919,578 @@
                 }
                 outputLine.innerHTML = text;
                 terminalOutput.appendChild(outputLine);
+                
+                // Auto-scroll
+                terminalOutput.scrollTop = terminalOutput.scrollHeight;
             }
             
-            // Auto-complete command
             function autoCompleteCommand() {
                 const command = terminalInput.value.toLowerCase();
-                const commands = ['help', 'browse', 'status', 'stealth', 'clear', 'cls', 'exit', 'quit', 'about', 'emergency', 'bypass'];
+                const commands = ['help', 'browse', 'status', 'stealth', 'bypass', 'check', 'clear', 'cls', 'exit', 'quit', 'about', 'emergency', 'update', 'secret'];
                 
                 const matchingCommands = commands.filter(cmd => cmd.startsWith(command));
                 
                 if (matchingCommands.length === 1) {
                     terminalInput.value = matchingCommands[0];
+                    
+                    // Move cursor to end
+                    setTimeout(() => {
+                        terminalInput.selectionStart = terminalInput.value.length;
+                        terminalInput.selectionEnd = terminalInput.value.length;
+                    }, 0);
                 } else if (matchingCommands.length > 1) {
-                    printOutput(terminalPrompt.textContent + ' ' + command);
-                    printOutput('Possible completions: ' + matchingCommands.join(', '));
+                    printOutput(`<span class="terminal-prompt-text">${terminalPrompt.textContent}</span> ${command}`);
+                    printOutput('Possible completions: ' + matchingCommands.join(', '), 'info-text');
                 }
             }
             
-            // Monitor for potential detection
-            function setupMonitoringDetection() {
-                // Monitor focus/blur events
-                let focusTime, blurTime;
-                let lastDetectionTime = 0;
-                let detectionCount = 0;
+            function checkForGoGuardian(verbose = false) {
+                // Check for GoGuardian elements
+                const ggElements = document.querySelectorAll(
+                    '[id*="gg-"], [class*="gg-"], ' +
+                    '[id*="goguardian-"], [class*="goguardian-"], ' +
+                    '[id*="teacher-"], [class*="teacher-"]'
+                );
                 
-                window.addEventListener('focus', function() {
-                    focusTime = new Date().getTime();
-                    
-                    // If we're returning to our tab very quickly after a blur,
-                    // this might be GoGuardian taking screenshots
-                    if (blurTime && (focusTime - blurTime < 200)) {
-                        const now = new Date().getTime();
-                        if (now - lastDetectionTime < 1000) {
-                            detectionCount++;
-                            if (detectionCount >= 3) {
-                                possibleMonitoringDetected();
-                                detectionCount = 0;
-                            }
-                        } else {
-                            detectionCount = 1;
-                        }
-                        lastDetectionTime = now;
+                // Check for GoGuardian scripts
+                const scripts = document.querySelectorAll('script');
+                let scriptDetected = false;
+                
+                scripts.forEach(script => {
+                    const src = script.src || '';
+                    if (src.includes('goguardian') || src.includes('teacher')) {
+                        scriptDetected = true;
                     }
                 });
                 
-                window.addEventListener('blur', function() {
-                    blurTime = new Date().getTime();
-                });
+                // Set the detection status
+                extensionDetected = ggElements.length > 0 || scriptDetected;
+                updateStatusIndicators();
                 
-                // Mouse movement monitoring
+                if (verbose) {
+                    if (extensionDetected) {
+                        printOutput('GoGuardian extension detected', 'success-text');
+                        printOutput('All features are available', 'info-text');
+                    } else {
+                        printOutput('GoGuardian extension not detected', 'error-text');
+                        printOutput('Limited functionality available', 'warning-text');
+                        printOutput('Type "secret" for override options', 'info-text');
+                    }
+                }
+                
+                return extensionDetected;
+            }
+            
+            function setupMonitoringDetection() {
                 let lastMouseX = 0;
                 let lastMouseY = 0;
-                let suspiciousMovements = 0;
-                let lastMouseTime = 0;
+                let mouseMovements = [];
+                let similarMovementCount = 0;
+                let detectionCount = 0;
+                let lastDetectionTime = 0;
+                let monitoringDetected = false;
+                let bypassMonitoring = true; // Default to true for bypass mode
                 
-                document.addEventListener('mousemove', function(e) {
-                    const now = new Date().getTime();
-                    if (now - lastMouseTime < 50) return; // Throttle checks
-                    lastMouseTime = now;
-                    
-                    // Detect unnatural mouse movements (straight lines, perfect angles)
-                    // that might indicate automated movement
-                    const dx = e.clientX - lastMouseX;
-                    const dy = e.clientY - lastMouseY;
-                    
-                    // Check for perfectly horizontal or vertical movements
-                    // with very precise coordinates
-                    if ((Math.abs(dx) < 1 && Math.abs(dy) > 5) || 
-                        (Math.abs(dy) < 1 && Math.abs(dx) > 5)) {
-                        suspiciousMovements++;
-                        if (suspiciousMovements > 5) {
-                            possibleMonitoringDetected();
-                            suspiciousMovements = 0;
+                // Tracking for focus/blur events
+                let focusBlurCount = 0;
+                let lastFocusTime = Date.now();
+                
+                // Mouse movement monitoring
+                window.addEventListener('mousemove', function(e) {
+                    // Store movement vectors
+                    if (lastMouseX !== 0 && lastMouseY !== 0) {
+                        const dx = e.clientX - lastMouseX;
+                        const dy = e.clientY - lastMouseY;
+                        mouseMovements.push({dx, dy});
+                        
+                        // Keep only the last 20 movements
+                        if (mouseMovements.length > 20) {
+                            mouseMovements.shift();
                         }
-                    } else {
-                        suspiciousMovements = Math.max(0, suspiciousMovements - 1);
+                        
+                        // Analyze movement patterns
+                        if (mouseMovements.length >= 10) {
+                            analyzeMouseMovements();
+                        }
                     }
                     
                     lastMouseX = e.clientX;
                     lastMouseY = e.clientY;
                 });
                 
-                // Check for hidden elements periodically
-                monitoringCheckInterval = setInterval(function() {
-                    // Check for elements with screen recording or capture-related classes/IDs
-                    const suspiciousElements = document.querySelectorAll(
-                        '[class*="capture"], [class*="record"], [id*="capture"], [id*="record"], ' + 
-                        '[class*="screen"], [id*="screen"], [class*="monitor"], [id*="monitor"], ' +
-                        '[class*="goguardian"], [id*="goguardian"]'
-                    );
-                    
-                    // Check for specific GoGuardian elements
-                    const ggElements = document.querySelectorAll(
-                        '[id*="gg-"], [class*="gg-"], ' +
-                        '[id*="goguardian-"], [class*="goguardian-"], ' +
-                        '[id*="teacher-"], [class*="teacher-"]'
-                    );
-                    
-                    // Check for monitoring iframes
-                    const monitoringIframes = document.querySelectorAll('iframe:not(#browser-frame)');
-                    
-                    // Only trigger if we find multiple indicators
-                    if ((suspiciousElements.length > 0 && ggElements.length > 0) ||
-                        (monitoringIframes.length > 0 && ggElements.length > 0) ||
-                        (suspiciousElements.length > 2 && monitoringIframes.length > 0)) {
-                        possibleMonitoringDetected();
+                // Focus/blur detection
+                window.addEventListener('focus', function() {
+                    const currentTime = Date.now();
+                    if (currentTime - lastFocusTime < 1000) {
+                        focusBlurCount++;
+                        if (focusBlurCount > 3) {
+                            possibleMonitoringDetected();
+                            detectionCount++;
+                        }
                     }
-                }, 2000);
+                    lastFocusTime = currentTime;
+                });
                 
-                // Check for GoGuardian extension
-                const checkForExtension = setInterval(function() {
-                    if (window.chrome && chrome.runtime) {
-                        chrome.runtime.sendMessage('goguardian', {}, function(response) {
-                            if (chrome.runtime.lastError) {
-                                // Extension not found
-                                clearInterval(checkForExtension);
-                            } else {
-                                // Extension found
-                                possibleMonitoringDetected();
+                window.addEventListener('blur', function() {
+                    const currentTime = Date.now();
+                    if (currentTime - lastFocusTime < 1000) {
+                        focusBlurCount++;
+                        if (focusBlurCount > 3) {
+                            possibleMonitoringDetected();
+                            detectionCount++;
+                        }
+                    }
+                });
+                
+                // Reset focus/blur counter periodically
+                setInterval(function() {
+                    focusBlurCount = 0;
+                }, 30000);
+                
+                function analyzeMouseMovements() {
+                    // Check for perfectly straight lines or regular patterns
+                    let straightLineCount = 0;
+                    let perfectAngles = 0;
+                    
+                    for (let i = 1; i < mouseMovements.length; i++) {
+                        const prev = mouseMovements[i - 1];
+                        const curr = mouseMovements[i];
+                        
+                        // Perfectly horizontal or vertical movements
+                        if ((curr.dx === 0 && prev.dx === 0) || (curr.dy === 0 && prev.dy === 0)) {
+                            straightLineCount++;
+                        }
+                        
+                        // Calculate angle between movements
+                        const angle1 = Math.atan2(prev.dy, prev.dx);
+                        const angle2 = Math.atan2(curr.dy, curr.dx);
+                        const angleDiff = Math.abs(angle2 - angle1);
+                        
+                        // Check for identical angle changes (highly suspicious)
+                        if (i > 1) {
+                            const prev2 = mouseMovements[i - 2];
+                            const angle0 = Math.atan2(prev2.dy, prev2.dx);
+                            const angleDiff1 = Math.abs(angle1 - angle0);
+                            
+                            if (Math.abs(angleDiff - angleDiff1) < 0.01) {
+                                perfectAngles++;
                             }
-                        });
+                        }
                     }
-                }, 5000);
+                    
+                    if (straightLineCount > 5 || perfectAngles > 3) {
+                        similarMovementCount++;
+                        if (similarMovementCount > 2) {
+                            possibleMonitoringDetected();
+                            detectionCount++;
+                        }
+                    } else {
+                        // Reset count if no suspicious movement detected
+                        similarMovementCount = Math.max(0, similarMovementCount - 1);
+                    }
+                }
                 
-                // Check for monitoring scripts
-                const scriptObserver = new MutationObserver(function(mutations) {
-                    mutations.forEach(function(mutation) {
-                        if (mutation.addedNodes && mutation.addedNodes.length > 0) {
-                            for (let i = 0; i < mutation.addedNodes.length; i++) {
-                                const node = mutation.addedNodes[i];
+                function possibleMonitoringDetected() {
+                    const currentTime = Date.now();
+                    // If this is a new detection (not within the last second)
+                    if (currentTime - lastDetectionTime > 1000) {
+                        detectionCount++;
+                        lastDetectionTime = currentTime;
+                        
+                        // If we've had multiple detections, consider monitoring detected
+                        if (detectionCount > 3 && !monitoringDetected) {
+                            monitoringDetected = true;
+                            updateStatusIndicators();
+                            
+                            if (!bypassMonitoring) {
+                                activateScreenBlock();
+                            }
+                        }
+                    }
+                }
+                
+                function updateStatusIndicators() {
+                    document.getElementById('monitoring-status').textContent = monitoringDetected ? 'DETECTED' : 'NONE';
+                    document.getElementById('monitoring-status').style.color = monitoringDetected ? '#ff5555' : '#55ff55';
+                    
+                    // Update bypass mode indicator
+                    document.getElementById('bypass-status').textContent = bypassMonitoring ? 'ON' : 'OFF';
+                    document.getElementById('bypass-status').style.color = bypassMonitoring ? '#ff5555' : '#55ff55';
+                }
+                
+                function activateScreenBlock() {
+                    const screenBlock = document.getElementById('screen-block');
+                    if (screenBlock) {
+                        screenBlock.style.display = 'flex';
+                        
+                        // After 3 seconds, check if we should keep blocking based on bypass mode
+                        setTimeout(() => {
+                            if (bypassMonitoring) {
+                                screenBlock.style.display = 'none';
+                            }
+                        }, 3000);
+                    }
+                }
+                
+                // Initialize all detection mechanisms
+                monitorNetworkRequests();
+                protectDOM();
+                monitorWebSockets();
+                detectMonitoringExtensions();
+                detectCanvasFingerprinting();
+                detectVisibilityChecks();
+                
+                // Make bypass toggle function available globally
+                window.toggleBypassMode = function() {
+                    bypassMonitoring = !bypassMonitoring;
+                    updateStatusIndicators();
+                    
+                    // Display notification in terminal
+                    const message = bypassMonitoring 
+                        ? 'Bypass mode enabled. Monitoring will be detected but content will remain visible.' 
+                        : 'Bypass mode disabled. Content will be hidden when monitoring is detected.';
+                    
+                    printToTerminal(message);
+                    
+                    // If monitoring is currently detected and we've turned off bypass, hide content
+                    if (monitoringDetected && !bypassMonitoring) {
+                        activateScreenBlock();
+                    } else if (monitoringDetected && bypassMonitoring) {
+                        // If monitoring is detected but we've turned on bypass, show content
+                        document.getElementById('screen-block').style.display = 'none';
+                    }
+                };
+                
+                // Export functions and state for use in command processing
+                window.monitoringState = {
+                    isDetected: () => monitoringDetected,
+                    isBypassed: () => bypassMonitoring,
+                    toggleBypass: () => window.toggleBypassMode()
+                };
+                
+                updateStatusIndicators();
+            }
+            
+            function monitorNetworkRequests() {
+                // Intercept fetch requests
+                const originalFetch = window.fetch;
+                window.fetch = function(resource, init) {
+                    if (typeof resource === 'string' && (
+                        resource.includes('goguardian') || 
+                        resource.includes('monitor') || 
+                        resource.includes('teacher') ||
+                        resource.includes('securly') ||
+                        resource.includes('classroom') && resource.includes('google') ||
+                        resource.includes('screen') && resource.includes('capture')
+                    )) {
+                        possibleMonitoringDetected();
+                        detectionCount++;
+                        throw new Error('Monitoring request blocked');
+                    }
+                    return originalFetch.apply(this, arguments);
+                };
+
+                // Intercept XMLHttpRequest
+                const originalXHR = window.XMLHttpRequest;
+                window.XMLHttpRequest = function() {
+                    const xhr = new originalXHR();
+                    const originalOpen = xhr.open;
+                    xhr.open = function(method, url) {
+                        if (typeof url === 'string' && (
+                            url.includes('goguardian') || 
+                            url.includes('monitor') || 
+                            url.includes('teacher') ||
+                            url.includes('securly') ||
+                            url.includes('classroom') && url.includes('google') ||
+                            url.includes('screen') && url.includes('capture')
+                        )) {
+                            possibleMonitoringDetected();
+                            detectionCount++;
+                            throw new Error('Monitoring request blocked');
+                        }
+                        return originalOpen.apply(this, arguments);
+                    };
+                    return xhr;
+                };
+            }
+            
+            function protectDOM() {
+                // Monitor suspicious DOM changes
+                const domObserver = new MutationObserver(mutations => {
+                    let suspiciousChanges = 0;
+                    
+                    mutations.forEach(mutation => {
+                        // Check for added nodes with monitoring-related attributes
+                        if (mutation.addedNodes) {
+                            mutation.addedNodes.forEach(node => {
                                 if (node.nodeType === 1) { // Element node
-                                    // Check for monitoring scripts
-                                    if (node.tagName === 'SCRIPT') {
-                                        const src = node.src || '';
-                                        if (src.includes('goguardian') || 
-                                            src.includes('monitor') || 
-                                            src.includes('teacher')) {
-                                            possibleMonitoringDetected();
+                                    // Check attributes
+                                    if (node.hasAttributes()) {
+                                        for (let i = 0; i < node.attributes.length; i++) {
+                                            const attr = node.attributes[i];
+                                            const value = attr.value.toLowerCase();
+                                            if (value.includes('goguardian') || 
+                                                value.includes('monitor') || 
+                                                value.includes('teacher') ||
+                                                value.includes('screen') && value.includes('capture') ||
+                                                value.includes('securly')) {
+                                                suspiciousChanges++;
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Check for invisible elements that may be monitoring
+                                    if (node.style && (
+                                        node.style.opacity === '0' ||
+                                        node.style.visibility === 'hidden' ||
+                                        node.style.display === 'none'
+                                    )) {
+                                        // Check if it has monitoring-related attributes or classes
+                                        if (node.id && (
+                                            node.id.includes('monitor') ||
+                                            node.id.includes('guard') ||
+                                            node.id.includes('teacher') ||
+                                            node.id.includes('screen') ||
+                                            node.id.includes('capture')
+                                        )) {
+                                            suspiciousChanges++;
                                         }
                                     }
                                 }
+                            });
+                        }
+                        
+                        // Check for attribute changes
+                        if (mutation.type === 'attributes') {
+                            const target = mutation.target;
+                            const attrName = mutation.attributeName;
+                            const attrValue = target.getAttribute(attrName);
+                            
+                            if (attrValue && attrValue.toLowerCase && (
+                                attrValue.toLowerCase().includes('goguardian') ||
+                                attrValue.toLowerCase().includes('monitor') ||
+                                attrValue.toLowerCase().includes('teacher') ||
+                                attrValue.toLowerCase().includes('securly')
+                            )) {
+                                suspiciousChanges++;
                             }
                         }
                     });
+                    
+                    if (suspiciousChanges >= 2) {
+                        possibleMonitoringDetected();
+                        detectionCount++;
+                    }
                 });
                 
-                scriptObserver.observe(document.documentElement, {
+                domObserver.observe(document.documentElement, {
                     childList: true,
+                    attributes: true,
+                    characterData: true,
                     subtree: true
                 });
             }
             
-            // Handle monitoring detection
-            function possibleMonitoringDetected() {
-                monitoringDetected = true;
-                monitoringStatus.textContent = 'MONITORING DETECTED';
-                monitoringStatus.className = 'warning-text';
-                
-                // Only activate blocking if in stealth mode AND bypass is not active
-                if (stealthMode && !bypassMonitoring) {
-                    screenBlock.style.display = 'flex';
-                    
-                    // Auto-hide the block after a random period (3-8 seconds)
-                    setTimeout(function() {
-                        if (Math.random() > 0.3) { // 70% chance to auto-hide
-                            screenBlock.style.display = 'none';
-                            monitoringDetected = false;
-                            monitoringStatus.textContent = 'No monitoring detected';
-                            monitoringStatus.className = '';
-                        }
-                    }, 3000 + Math.random() * 5000);
-                } else if (bypassMonitoring) {
-                    // If bypass mode is active, allow content to stay visible
-                    screenBlock.style.display = 'none';
-                    
-                    // Still clear the monitoring detection after a while
-                    setTimeout(function() {
-                        monitoringDetected = false;
-                        monitoringStatus.textContent = 'No monitoring detected';
-                        monitoringStatus.className = '';
-                    }, 5000);
-                }
-            }
-            
-            // Toggle bypass mode
-            function toggleBypass() {
-                bypassMonitoring = !bypassMonitoring;
-                if (bypassMonitoring) {
-                    printOutput('GoGuardian Bypass Mode ACTIVATED - You can browse even when monitoring is detected', 'success-text');
-                } else {
-                    printOutput('GoGuardian Bypass Mode DEACTIVATED - Browser will be hidden when monitoring is detected', 'warning-text');
-                }
-                updateStealthDisplay();
-            }
-            
-            // Terminal window controls
-            document.querySelector('.terminal-button.minimize').addEventListener('click', function() {
-                printOutput('Terminal minimized (simulated)', 'warning-text');
-            });
-            
-            document.querySelector('.terminal-button.maximize').addEventListener('click', function() {
-                if (document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen();
-                }
-            });
-            
-            document.querySelector('.terminal-button.close').addEventListener('click', function() {
-                printOutput('Terminal cannot be closed directly', 'error-text');
-                printOutput('Use browser navigation instead', 'warning-text');
-            });
-            
-            // Always focus the input when clicking anywhere in the terminal
-            document.addEventListener('click', function() {
-                if (!browserMode) {
-                    terminalInput.focus();
-                }
-            });
-
-            // Enhanced monitoring detection
-            function setupEnhancedMonitoring() {
-                // Network request monitoring
-                function monitorNetworkRequests() {
-                    // Intercept fetch requests
-                    const originalFetch = window.fetch;
-                    window.fetch = function(url, options) {
-                        if (url.includes('goguardian') || 
-                            url.includes('monitor') || 
-                            url.includes('teacher')) {
-                            possibleMonitoringDetected();
-                            return Promise.reject(new Error('Monitoring request blocked'));
-                        }
-                        return originalFetch(url, options);
-                    };
-                    
-                    // Intercept XMLHttpRequest
-                    const originalXHR = window.XMLHttpRequest;
-                    window.XMLHttpRequest = function() {
-                        const xhr = new originalXHR();
-                        const originalOpen = xhr.open;
-                        xhr.open = function(method, url) {
-                            if (url.includes('goguardian') || 
-                                url.includes('monitor') || 
-                                url.includes('teacher')) {
-                                possibleMonitoringDetected();
-                                throw new Error('Monitoring request blocked');
-                            }
-                            return originalOpen.apply(this, arguments);
-                        };
-                        return xhr;
-                    };
-                }
-
-                // Enhanced mouse movement analysis
-                function analyzeMouseMovements() {
-                    let movementHistory = [];
-                    const maxHistory = 10;
-                    
-                    document.addEventListener('mousemove', e => {
-                        const now = new Date().getTime();
-                        movementHistory.push({
-                            x: e.clientX,
-                            y: e.clientY,
-                            time: now
-                        });
-                        
-                        if (movementHistory.length > maxHistory) {
-                            movementHistory.shift();
-                        }
-                        
-                        if (movementHistory.length >= 3) {
-                            const recentMovements = movementHistory.slice(-3);
-                            const angles = calculateMovementAngles(recentMovements);
-                            
-                            // Check for suspicious patterns
-                            if (isSuspiciousPattern(angles)) {
-                                possibleMonitoringDetected();
-                            }
-                        }
-                    });
-                }
-
-                function calculateMovementAngles(movements) {
-                    const angles = [];
-                    for (let i = 1; i < movements.length; i++) {
-                        const dx = movements[i].x - movements[i-1].x;
-                        const dy = movements[i].y - movements[i-1].y;
-                        angles.push(Math.atan2(dy, dx));
+            function monitorWebSockets() {
+                const originalWebSocket = window.WebSocket;
+                window.WebSocket = function(url, protocols) {
+                    if (typeof url === 'string' && (
+                        url.includes('goguardian') || 
+                        url.includes('monitor') || 
+                        url.includes('teacher') ||
+                        url.includes('securly') ||
+                        url.includes('classroom') && url.includes('google'))) {
+                        possibleMonitoringDetected();
+                        detectionCount++;
+                        throw new Error('Monitoring WebSocket blocked');
                     }
-                    return angles;
-                }
-
-                function isSuspiciousPattern(angles) {
-                    // Check for perfectly straight lines or right angles
-                    const tolerance = 0.1;
-                    return angles.some(angle => 
-                        Math.abs(angle % (Math.PI/2)) < tolerance || // Right angles
-                        Math.abs(angle % Math.PI) < tolerance // Straight lines
-                    );
-                }
-
-                // DOM manipulation protection
-                function protectDOM() {
-                    // Prevent monitoring scripts from modifying the DOM
-                    const originalCreateElement = document.createElement;
-                    document.createElement = function(tagName) {
-                        const element = originalCreateElement.call(document, tagName);
-                        
-                        // Monitor for suspicious attributes
-                        const originalSetAttribute = element.setAttribute;
-                        element.setAttribute = function(name, value) {
-                            if (name.includes('goguardian') || 
-                                name.includes('monitor') || 
-                                name.includes('teacher')) {
-                                possibleMonitoringDetected();
-                                return;
-                            }
-                            return originalSetAttribute.call(this, name, value);
-                        };
-                        
-                        return element;
-                    };
-                }
-
-                // Event listener protection
-                function protectEventListeners() {
-                    // Monitor for suspicious event listeners
-                    const originalAddEventListener = EventTarget.prototype.addEventListener;
-                    EventTarget.prototype.addEventListener = function(type, listener, options) {
-                        if (type.includes('goguardian') || 
-                            type.includes('monitor') || 
-                            type.includes('teacher')) {
-                            possibleMonitoringDetected();
-                            return;
-                        }
-                        return originalAddEventListener.call(this, type, listener, options);
-                    };
-                }
-
-                // Enhanced script detection
-                function detectMonitoringScripts() {
-                    // Check for script injection attempts
-                    const scripts = document.querySelectorAll('script');
-                    scripts.forEach(script => {
-                        if (script.src.includes('goguardian') || 
-                            script.src.includes('monitor') || 
-                            script.src.includes('teacher')) {
-                            possibleMonitoringDetected();
-                        }
-                    });
-                    
-                    // Monitor for script content changes
-                    const observer = new MutationObserver(mutations => {
-                        mutations.forEach(mutation => {
-                            if (mutation.type === 'childList' && mutation.addedNodes.length) {
-                                mutation.addedNodes.forEach(node => {
-                                    if (node.nodeName === 'SCRIPT') {
-                                        const content = node.textContent || '';
-                                        if (content.includes('goguardian') || 
-                                            content.includes('monitor') || 
-                                            content.includes('teacher')) {
-                                            possibleMonitoringDetected();
-                                        }
-                                    }
-                                });
-                            }
-                        });
-                    });
-                    
-                    observer.observe(document.documentElement, {
-                        childList: true,
-                        subtree: true,
-                        characterData: true
-                    });
-                }
-
-                // Initialize all enhanced monitoring features
-                monitorNetworkRequests();
-                analyzeMouseMovements();
-                protectDOM();
-                protectEventListeners();
-                detectMonitoringScripts();
+                    return new originalWebSocket(url, protocols);
+                };
             }
-
-            // Call the enhanced monitoring setup
-            setupEnhancedMonitoring();
+            
+            function detectMonitoringExtensions() {
+                // Check for specific extension IDs related to monitoring
+                const knownExtensionIds = [
+                    'haldlgldplgnggkjaafhelgiaglafanh', // GoGuardian
+                    'kjnellgnmkpcefnbmcmabjioaolliinm', // Securly
+                    'jaoebcikabjppaclpgbodmmnfjihdngk', // Lightspeed
+                    'honjcnefekfnompampcpmcdadibmjhlk'  // Bark
+                ];
+                
+                if (window.chrome && chrome.runtime && chrome.runtime.connect) {
+                    knownExtensionIds.forEach(id => {
+                        try {
+                            chrome.runtime.connect(id);
+                            // If connection succeeds, extension is present
+                            possibleMonitoringDetected();
+                            detectionCount++;
+                        } catch (e) {
+                            // Extension not found, which is good
+                        }
+                    });
+                }
+                
+                // Look for extension-specific CSS
+                setTimeout(() => {
+                    const allElements = document.querySelectorAll('*');
+                    let monitoringClasses = 0;
+                    
+                    allElements.forEach(el => {
+                        const classes = el.className;
+                        if (typeof classes === 'string' && (
+                            classes.includes('goguardian') ||
+                            classes.includes('securly') ||
+                            classes.includes('lightspeed') ||
+                            classes.includes('monitor') && classes.includes('extension')
+                        )) {
+                            monitoringClasses++;
+                        }
+                    });
+                    
+                    if (monitoringClasses > 0) {
+                        possibleMonitoringDetected();
+                        detectionCount++;
+                    }
+                }, 2000);
+            }
+            
+            function detectCanvasFingerprinting() {
+                const originalToDataURL = HTMLCanvasElement.prototype.toDataURL;
+                const originalGetImageData = CanvasRenderingContext2D.prototype.getImageData;
+                
+                let canvasReadCount = 0;
+                const canvasReadThreshold = 5;
+                const canvasReadResetInterval = 10000; // 10 seconds
+                
+                // Reset the counter periodically
+                setInterval(() => {
+                    canvasReadCount = 0;
+                }, canvasReadResetInterval);
+                
+                // Monitor canvas data extraction (common in fingerprinting)
+                HTMLCanvasElement.prototype.toDataURL = function() {
+                    canvasReadCount++;
+                    if (canvasReadCount > canvasReadThreshold) {
+                        possibleMonitoringDetected();
+                        detectionCount++;
+                    }
+                    return originalToDataURL.apply(this, arguments);
+                };
+                
+                CanvasRenderingContext2D.prototype.getImageData = function() {
+                    canvasReadCount++;
+                    if (canvasReadCount > canvasReadThreshold) {
+                        possibleMonitoringDetected();
+                        detectionCount++;
+                    }
+                    return originalGetImageData.apply(this, arguments);
+                };
+            }
+            
+            function detectVisibilityChecks() {
+                // Override getComputedStyle to detect if something is checking visibility
+                const originalGetComputedStyle = window.getComputedStyle;
+                window.getComputedStyle = function(element) {
+                    // If something is checking visibility of our main content
+                    if (element && (
+                        element === document.getElementById('terminal-output') ||
+                        element === document.getElementById('input-line') ||
+                        element === document.querySelector('.status-bar')
+                    )) {
+                        possibleMonitoringDetected();
+                        detectionCount++;
+                    }
+                    return originalGetComputedStyle.apply(this, arguments);
+                };
+                
+                // Override getBoundingClientRect to detect position checks
+                const originalGetBoundingClientRect = Element.prototype.getBoundingClientRect;
+                Element.prototype.getBoundingClientRect = function() {
+                    // If something is checking position of our main elements
+                    if (this === document.getElementById('terminal-output') ||
+                        this === document.getElementById('input-line') ||
+                        this === document.querySelector('.status-bar')) {
+                        possibleMonitoringDetected();
+                        detectionCount++;
+                    }
+                    return originalGetBoundingClientRect.apply(this);
+                };
+            }
+            
+            function checkMonitoringElements() {
+                printOutput('Checking for monitoring elements...', 'info-text');
+                
+                // Check for GoGuardian elements
+                const ggElements = document.querySelectorAll(
+                    '[id*="gg-"], [class*="gg-"], ' +
+                    '[id*="goguardian-"], [class*="goguardian-"], ' +
+                    '[id*="teacher-"], [class*="teacher-"]'
+                );
+                
+                // Check for suspicious elements
+                const suspiciousElements = document.querySelectorAll(
+                    '[class*="capture"], [class*="record"], ' + 
+                    '[class*="screen"], [id*="screen"], ' +
+                    '[class*="monitor"], [id*="monitor"]'
+                );
+                
+                // Check for monitoring iframes
+                const iframes = document.querySelectorAll('iframe:not(#browser-frame)');
+                
+                printOutput(`GoGuardian elements found: ${ggElements.length}`, ggElements.length > 0 ? 'warning-text' : 'success-text');
+                printOutput(`Suspicious elements found: ${suspiciousElements.length}`, suspiciousElements.length > 0 ? 'warning-text' : 'success-text');
+                printOutput(`Extra iframes found: ${iframes.length}`, iframes.length > 0 ? 'warning-text' : 'success-text');
+                
+                if (ggElements.length === 0 && suspiciousElements.length === 0 && iframes.length === 0) {
+                    printOutput('No monitoring elements detected!', 'success-text');
+                } else {
+                    printOutput('Potentially suspicious elements detected.', 'warning-text');
+                }
+            }
+            
+            function changeTheme(themeName) {
+                const root = document.documentElement;
+                
+                switch(themeName.toLowerCase()) {
+                    case 'light':
+                        root.style.setProperty('--bg-color', '#f0f0f0');
+                        root.style.setProperty('--text-color', '#333333');
+                        root.style.setProperty('--prompt-color', '#0066cc');
+                        root.style.setProperty('--cursor-color', '#0066cc');
+                        root.style.setProperty('--header-color', '#dddddd');
+                        printOutput('Light theme applied', 'success-text');
+                        break;
+                    case 'matrix':
+                        root.style.setProperty('--bg-color', '#000000');
+                        root.style.setProperty('--text-color', '#00ff00');
+                        root.style.setProperty('--prompt-color', '#00ff00');
+                        root.style.setProperty('--cursor-color', '#00ff00');
+                        root.style.setProperty('--header-color', '#002200');
+                        printOutput('Matrix theme applied', 'success-text');
+                        break;
+                    case 'hacker':
+                        root.style.setProperty('--bg-color', '#0d0d0d');
+                        root.style.setProperty('--text-color', '#0f0');
+                        root.style.setProperty('--prompt-color', '#ff0000');
+                        root.style.setProperty('--cursor-color', '#ff0000');
+                        root.style.setProperty('--header-color', '#1a1a1a');
+                        printOutput('Hacker theme applied', 'success-text');
+                        break;
+                    case 'dark':
+                    default:
+                        // Reset to default theme
+                        root.style.setProperty('--bg-color', '#121212');
+                        root.style.setProperty('--text-color', '#d8d8d8');
+                        root.style.setProperty('--prompt-color', '#50fa7b');
+                        root.style.setProperty('--cursor-color', '#f8f8f2');
+                        root.style.setProperty('--header-color', '#282a36');
+                        printOutput('Default dark theme applied', 'success-text');
+                        break;
+                }
+            }
         });
+        
+        /* SDCast thought this was a footer. I turned it into a trapdoor. */
     </script>
 </body>
 </html> 

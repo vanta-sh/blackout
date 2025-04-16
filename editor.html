@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Editor</title>
+    <!-- Nothing is here. Keep going. -->
+    <style>
+        :root {
+            --bg-color: #1e1e1e;
+            --sidebar-bg: #252526;
+            --explorer-bg: #333333;
+            --statusbar-bg: #007acc;
+            --statusbar-fg: #ffffff;
+            --editor-bg: #1e1e1e;
+            --editor-line-number: #858585;
+            --editor-line-highlight: #282828;
+            --text-color: #d4d4d4;
+            --menu-bg: #3c3c3c;
+            --border-color: #474747;
+            --accent-color: #007acc;
+            --tab-active-bg: #1e1e1e;
+            --tab-inactive-bg: #2d2d2d;
+            --font-family: 'Consolas', 'Courier New', monospace;
+        }
+        
+        /* This comment wasn't in the commit logs. */
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .titlebar {
+            height: 30px;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10px;
+            font-size: 12px;
+            user-select: none;
+            color: #999;
+        }
+        
+        .window-controls {
+            display: flex;
+        }
+        
+        .control-button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 8px;
+            cursor: pointer;
+        }
+        
+        .control-button.close {
+            background-color: #ff5f56;
+        }
+        
+        .control-button.minimize {
+            background-color: #ffbd2e;
+        }
+        
+        .control-button.maximize {
+            background-color: #27c93f;
+        }
+        
+        .menu-bar {
+            height: 30px;
+            background-color: var(--menu-bg);
+            display: flex;
+            align-items: center;
+            padding-left: 10px;
+            font-size: 12px;
+            user-select: none;
+        }
+        
+        .menu-item {
+            padding: 0 10px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .menu-item:hover {
+            background-color: var(--sidebar-bg);
+        }
+        
+        .sidebar {
+            width: 50px;
+            background-color: var(--sidebar-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 10px;
+            user-select: none;
+        }
+        
+        .sidebar-icon {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            color: #858585;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+        }
+        
+        .sidebar-icon.active, .sidebar-icon:hover {
+            color: #fff;
+        }
+        
+        .explorer {
+            width: 240px;
+            background-color: var(--explorer-bg);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            user-select: none;
+        }
+        
+        .explorer-header {
+            padding: 10px;
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: #ddd;
+        }
+        
+        .folder {
+            padding: 4px 10px 4px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+        }
+        
+        .folder:hover {
+            background-color: #2a2d2e;
+        }
+        
+        .folder-icon {
+            margin-right: 6px;
+            color: #c09553;
+        }
+        
+        .file {
+            padding: 3px 10px 3px 38px;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .file:hover {
+            background-color: #2a2d2e;
+        }
+        
+        .file.active {
+            background-color: #37373d;
+        }
+        
+        .file-icon {
+            margin-right: 6px;
+            font-size: 14px;
+        }
+        
+        /* You won't see this in dev tools. */
+        
+        .js-icon {
+            color: #cbcb41;
+        }
+        
+        .html-icon {
+            color: #e44d26;
+        }
+        
+        .css-icon {
+            color: #42a5f5;
+        }
+        
+        .editor-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .tabs {
+            height: 35px;
+            background-color: var(--bg-color);
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            overflow-x: auto;
+            user-select: none;
+        }
+        
+        .tabs::-webkit-scrollbar {
+            height: 0;
+        }
+        
+        .tab {
+            padding: 0 10px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            background-color: var(--tab-inactive-bg);
+            border-right: 1px solid var(--border-color);
+            min-width: 120px;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        
+        .tab.active {
+            background-color: var(--tab-active-bg);
+            border-top: 1px solid var(--accent-color);
+        }
+        
+        .tab-icon {
+            margin-right: 5px;
+            font-size: 14px;
+        }
+        
+        .editor {
+            flex: 1;
+            overflow: auto;
+            position: relative;
+            font-family: var(--font-family);
+            font-size: 14px;
+            line-height: 1.5;
+            tab-size: 4;
+        }
+        
+        .editor-content {
+            padding: 10px 0;
+            display: flex;
+        }
+        
+        .line-numbers {
+            text-align: right;
+            color: var(--editor-line-number);
+            padding: 0 10px;
+            user-select: none;
+        }
+        
+        .code {
+            flex: 1;
+            padding-right: 15px;
+        }
+        
+        .line {
+            white-space: pre;
+            display: flex;
+        }
+        
+        .line:hover {
+            background-color: rgba(33, 33, 33, 0.5);
+        }
+        
+        .line.highlight {
+            background-color: var(--editor-line-highlight);
+        }
+        
+        .token {
+            color: var(--text-color);
+        }
+        
+        .token.comment {
+            color: #6a9955;
+        }
+        
+        .token.string {
+            color: #ce9178;
+        }
+        
+        .token.number {
+            color: #b5cea8;
+        }
+        
+        .token.keyword {
+            color: #569cd6;
+        }
+        
+        .token.function {
+            color: #dcdcaa;
+        }
+        
+        .token.method {
+            color: #dcdcaa;
+        }
+        
+        .token.property {
+            color: #9cdcfe;
+        }
+        
+        .token.tag {
+            color: #569cd6;
+        }
+        
+        .token.attr-name {
+            color: #9cdcfe;
+        }
+        
+        .token.attr-value {
+            color: #ce9178;
+        }
+        
+        .token.operator {
+            color: #d4d4d4;
+        }
+        
+        .token.punctuation {
+            color: #d4d4d4;
+        }
+        
+        .status-bar {
+            height: 22px;
+            background-color: var(--statusbar-bg);
+            color: var(--statusbar-fg);
+            display: flex;
+            justify-content: space-between;
+            padding: 0 10px;
+            font-size: 12px;
+            user-select: none;
+        }
+        
+        .status-section {
+            display: flex;
+            align-items: center;
+        }
+        
+        .status-item {
+            padding: 0 8px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+        
+        .screen-block {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--editor-bg);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            color: #d4d4d4;
+        }
+        
+        .screen-block-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Authored by: Unknown. Maintained by: Regret. -->
+    <div class="titlebar">
+        <div>Code Editor - blackout.js</div>
+        <div class="window-controls">
+            <div class="control-button minimize"></div>
+            <div class="control-button maximize"></div>
+            <div class="control-button close"></div>
+        </div>
+    </div>
+    
+    <!-- I buried something in the source. Look harder. -->
+    <div class="menu-bar">
+        <div class="menu-item">File</div>
+        <div class="menu-item">Edit</div>
+        <div class="menu-item">Selection</div>
+        <div class="menu-item">View</div>
+        <div class="menu-item">Go</div>
+        <div class="menu-item">Run</div>
+        <div class="menu-item">Terminal</div>
+        <div class="menu-item">Help</div>
+    </div>
+    
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="sidebar-icon active">📁</div>
+            <div class="sidebar-icon">🔍</div>
+            <div class="sidebar-icon">🔄</div>
+            <div class="sidebar-icon">⚙️</div>
+        </div>
+        
+        <div class="explorer">
+            <div class="explorer-header">EXPLORER: PROJECT</div>
+            <div class="folder"><span class="folder-icon">📂</span> src</div>
+            <div class="file active"><span class="file-icon js-icon">JS</span> blackout.js</div>
+            <div class="file"><span class="file-icon js-icon">JS</span> stealth.js</div>
+            <div class="file"><span class="file-icon html-icon">HTML</span> index.html</div>
+            <div class="file"><span class="file-icon css-icon">CSS</span> styles.css</div>
+            <div class="folder"><span class="folder-icon">📂</span> utils</div>
+            <div class="file"><span class="file-icon js-icon">JS</span> detection.js</div>
+            <div class="file"><span class="file-icon js-icon">JS</span> bypass.js</div>
+            <div class="folder"><span class="folder-icon">📂</span> themes</div>
+            <div class="file"><span class="file-icon js-icon">JS</span> terminal.js</div>
+            <div class="file"><span class="file-icon js-icon">JS</span> document.js</div>
+            <div class="file"><span class="file-icon js-icon">JS</span> editor.js</div>
+        </div>
+        
+        <div class="editor-area">
+            <div class="tabs">
+                <div class="tab active"><span class="tab-icon js-icon">JS</span> blackout.js</div>
+                <div class="tab"><span class="tab-icon js-icon">JS</span> stealth.js</div>
+                <div class="tab"><span class="tab-icon html-icon">HTML</span> index.html</div>
+            </div>
+            
+            <div class="editor">
+                <div class="editor-content">
+                    <div class="line-numbers">
+                        <div>1</div>
+                        <div>2</div>
+                        <div>3</div>
+                        <div>4</div>
+                        <div>5</div>
+                        <div>6</div>
+                        <div>7</div>
+                        <div>8</div>
+                        <div>9</div>
+                        <div>10</div>
+                        <div>11</div>
+                        <div>12</div>
+                        <div>13</div>
+                        <div>14</div>
+                        <div>15</div>
+                        <div>16</div>
+                        <div>17</div>
+                        <div>18</div>
+                        <div>19</div>
+                        <div>20</div>
+                        <div>21</div>
+                        <div>22</div>
+                        <div>23</div>
+                        <div>24</div>
+                        <div>25</div>
+                    </div>
+                    <div class="code">
+                        <div class="line"><span class="token comment">/**</span></div>
+                        <div class="line"><span class="token comment"> * Blackout - Advanced browsing protection system</span></div>
+                        <div class="line"><span class="token comment"> * Version 2.0.0</span></div>
+                        <div class="line"><span class="token comment"> */</span></div>
+                        <div class="line"></div>
+                        <div class="line"><span class="token keyword">class</span> <span class="token function">Blackout</span> {</div>
+                        <div class="line highlight">  <span class="token keyword">constructor</span>() {</div>
+                        <div class="line">    <span class="token keyword">this</span>.<span class="token property">version</span> = <span class="token string">'2.0.0'</span>;</div>
+                        <div class="line">    <span class="token keyword">this</span>.<span class="token property">stealthMode</span> = <span class="token keyword">true</span>;</div>
+                        <div class="line">    <span class="token keyword">this</span>.<span class="token property">bypassMode</span> = <span class="token keyword">false</span>;</div>
+                        <div class="line">    <span class="token keyword">this</span>.<span class="token property">monitoringDetected</span> = <span class="token keyword">false</span>;</div>
+                        <div class="line">    <span class="token keyword">this</span>.<span class="token property">extensionRequired</span> = <span class="token keyword">true</span>;</div>
+                        <div class="line">    <span class="token keyword">this</span>.<span class="token property">extensionDetected</span> = <span class="token keyword">false</span>;</div>
+                        <div class="line">    <span class="token keyword">this</span>.<span class="token property">secretModeActive</span> = <span class="token keyword">false</span>;</div>
+                        <div class="line">    <span class="token keyword">this</span>.<span class="token property">secretCode</span> = <span class="token string">'lights-out'</span>;</div>
+                        <div class="line">    </div>
+                        <div class="line">    <span class="token method">this.initialize</span>();</div>
+                        <div class="line">  }</div>
+                        <div class="line">  </div>
+                        <div class="line">  <span class="token function">initialize</span>() {</div>
+                        <div class="line">    <span class="token keyword">this</span>.<span class="token method">checkForGoGuardian</span>();</div>
+                        <div class="line">    <span class="token keyword">this</span>.<span class="token method">setupMonitoringDetection</span>();</div>
+                        <div class="line">    <span class="token keyword">this</span>.<span class="token method">setupEventListeners</span>();</div>
+                        <div class="line">    </div>
+                        <div class="line">    <span class="token comment">// Load the selected theme</span></div>
+                        <div class="line">    <span class="token keyword">const</span> theme = localStorage.<span class="token method">getItem</span>(<span class="token string">'blackout-theme'</span>) || <span class="token string">'terminal'</span>;</div>
+                        <div class="line">    <span class="token keyword">this</span>.<span class="token method">loadTheme</span>(theme);</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="status-bar">
+                <div class="status-section">
+                    <div class="status-item">Ready</div>
+                    <div class="status-item">UTF-8</div>
+                    <div class="status-item">JavaScript</div>
+                </div>
+                <div class="status-section">
+                    <div class="status-item">Ln 7, Col 3</div>
+                    <div class="status-item">Spaces: 2</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="screen-block" class="screen-block">
+        <div class="screen-block-icon">⚠️</div>
+        <h2>Editor Session Paused</h2>
+        <p>Please wait a moment...</p>
+    </div>
+    
+    <script>
+        /* The style is broken because the truth leaked through. */
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elements
+            const screenBlock = document.getElementById('screen-block');
+            
+            // State
+            let extensionDetected = false;
+            let monitoringDetected = false;
+            let bypassMode = false;
+            let secretModeActive = false;
+            
+            /* Keep scrolling. The page doesn't end where you think. */
+            
+            // Check for GoGuardian extension (parent window will handle this)
+            function checkExtensionStatus() {
+                try {
+                    // Try to get status from parent frame
+                    extensionDetected = window.parent.extensionDetected || false;
+                } catch (e) {
+                    // If we can't access parent, assume we need to check ourselves
+                    checkForGoGuardian();
+                }
+            }
+            
+            // Basic check for monitoring software
+            function checkForGoGuardian() {
+                // Look for GoGuardian elements
+                const ggElements = document.querySelectorAll(
+                    '[id*="gg-"], [class*="gg-"], ' +
+                    '[id*="goguardian-"], [class*="goguardian-"], ' +
+                    '[id*="teacher-"], [class*="teacher-"]'
+                );
+                
+                extensionDetected = ggElements.length > 0;
+            }
+            
+            // Setup monitoring detection
+            function setupMonitoringDetection() {
+                // Monitor focus/blur events
+                let lastFocusTime = 0;
+                let lastBlurTime = 0;
+                let focusBlurCount = 0;
+                
+                window.addEventListener('focus', function() {
+                    const now = Date.now();
+                    lastFocusTime = now;
+                    
+                    if (lastBlurTime && now - lastBlurTime < 300) {
+                        focusBlurCount++;
+                        
+                        if (focusBlurCount >= 3) {
+                            possibleMonitoringDetected();
+                            focusBlurCount = 0;
+                        }
+                    }
+                });
+                
+                window.addEventListener('blur', function() {
+                    lastBlurTime = Date.now();
+                });
+                
+                // Look for suspicious elements periodically
+                setInterval(function() {
+                    if (!monitoringDetected) {
+                        const suspiciousElements = document.querySelectorAll(
+                            '[class*="capture"], [class*="record"], ' + 
+                            '[class*="screen"], [class*="monitor"], ' +
+                            '[class*="goguardian"], [class*="teacher"]'
+                        );
+                        
+                        if (suspiciousElements.length > 2) {
+                            possibleMonitoringDetected();
+                        }
+                    }
+                }, 3000);
+            }
+            
+            // Handle monitoring detection
+            function possibleMonitoringDetected() {
+                monitoringDetected = true;
+                
+                // Only block if bypass mode is not active
+                if (!bypassMode) {
+                    screenBlock.style.display = 'flex';
+                    
+                    // Auto-hide after random period
+                    setTimeout(function() {
+                        screenBlock.style.display = 'none';
+                        
+                        // Reset detection after delay
+                        setTimeout(function() {
+                            monitoringDetected = false;
+                        }, 3000);
+                    }, 3000 + Math.random() * 4000);
+                } else {
+                    // Reset detection after delay
+                    setTimeout(function() {
+                        monitoringDetected = false;
+                    }, 5000);
+                }
+            }
+            
+            // Add interactive elements
+            function setupInteractions() {
+                // Make tabs interactive
+                const tabs = document.querySelectorAll('.tab');
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', function() {
+                        tabs.forEach(t => t.classList.remove('active'));
+                        this.classList.add('active');
+                    });
+                });
+                
+                // Make sidebar icons interactive
+                const sidebarIcons = document.querySelectorAll('.sidebar-icon');
+                sidebarIcons.forEach(icon => {
+                    icon.addEventListener('click', function() {
+                        sidebarIcons.forEach(i => i.classList.remove('active'));
+                        this.classList.add('active');
+                    });
+                });
+                
+                // Make files interactive
+                const files = document.querySelectorAll('.file');
+                files.forEach(file => {
+                    file.addEventListener('click', function() {
+                        files.forEach(f => f.classList.remove('active'));
+                        this.classList.add('active');
+                    });
+                });
+                
+                // Secret code detection
+                let secretCode = '';
+                let secretTimeout;
+                
+                document.addEventListener('keydown', e => {
+                    if (secretTimeout) clearTimeout(secretTimeout);
+                    
+                    secretCode += e.key.toLowerCase();
+                    
+                    /* There's a div here that only shows at 3:33AM. */
+                    
+                    if (secretCode.length > 20) {
+                        secretCode = secretCode.substring(secretCode.length - 20);
+                    }
+                    
+                    if (secretCode.includes('lights-out')) {
+                        secretModeActive = true;
+                        console.log('Secret mode activated');
+                        secretCode = '';
+                    }
+                    
+                    secretTimeout = setTimeout(() => {
+                        secretCode = '';
+                    }, 2000);
+                });
+            }
+            
+            // Initialize
+            checkExtensionStatus();
+            setupMonitoringDetection();
+            setupInteractions();
+        });
+        
+        /* If you're reading this, you're either him — or me. */
+    </script>
+</body>
+</html> 

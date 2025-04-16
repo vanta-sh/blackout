@@ -3,222 +3,366 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Overview</title> <!-- Innocuous title -->
+    <title>Blackout Documentation</title>
     <style>
+        :root {
+            --bg-color: #f9f9f9;
+            --text-color: #333;
+            --heading-color: #111;
+            --link-color: #0066cc;
+            --code-bg: #f0f0f0;
+            --border-color: #ddd;
+            --warning-color: #f44336;
+            --success-color: #4caf50;
+            --info-color: #2196f3;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --mono-font: 'Consolas', 'Courier New', monospace;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f7f9fc;
-            color: #333;
+            font-family: var(--font-family);
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
             margin: 0;
             padding: 0;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
         }
         
         header {
-            background-color: #2196F3;
-            color: white;
-            padding: 20px;
             text-align: center;
-            border-bottom: 1px solid #1a77c9;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        h1, h2, h3, h4 {
+            color: var(--heading-color);
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
         }
         
         h1 {
-            margin: 0;
-            font-size: 28px;
-        }
-        
-        .developer {
-            font-size: 14px;
-            color: rgba(255,255,255,0.8);
-            margin-top: 5px;
-        }
-        
-        main {
-            flex: 1;
-            padding: 20px;
-            max-width: 800px;
-            margin: 0 auto;
-            width: 100%;
-        }
-        
-        .content-box {
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            font-size: 2.5rem;
+            margin-top: 0;
         }
         
         h2 {
-            color: #2196F3;
-            border-bottom: 2px solid #f0f0f0;
-            padding-bottom: 10px;
+            font-size: 1.8rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.3em;
         }
         
-        ul {
-            padding-left: 20px;
+        h3 {
+            font-size: 1.3rem;
+        }
+        
+        h4 {
+            font-size: 1.1rem;
+        }
+        
+        p {
+            margin: 1em 0;
+        }
+        
+        a {
+            color: var(--link-color);
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        code {
+            font-family: var(--mono-font);
+            background-color: var(--code-bg);
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        
+        pre {
+            background-color: var(--code-bg);
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: var(--mono-font);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        blockquote {
+            border-left: 4px solid var(--border-color);
+            margin: 0;
+            padding: 0 1em;
+            color: #555;
+        }
+        
+        ul, ol {
+            padding-left: 2em;
         }
         
         li {
-            margin-bottom: 10px;
+            margin: 0.5em 0;
+        }
+        
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1em 0;
+        }
+        
+        table, th, td {
+            border: 1px solid var(--border-color);
+        }
+        
+        th, td {
+            padding: 0.5em;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f0f0f0;
         }
         
         .warning {
-            background-color: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 15px;
-            margin: 20px 0;
+            background-color: #fff8f8;
+            border-left: 4px solid var(--warning-color);
+            padding: 0.8em 1em;
+            margin: 1em 0;
         }
         
-        .tip {
-            background-color: #d1ecf1;
-            border-left: 4px solid #17a2b8;
-            padding: 15px;
-            margin: 20px 0;
-        }
-        
-        .button-container {
-            display: flex;
-            justify-content: center;
-            margin: 30px 0;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        
-        .button {
-            display: inline-block;
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 5px;
+        .warning-title {
+            color: var(--warning-color);
             font-weight: bold;
-            transition: background-color 0.3s;
+            margin-bottom: 0.5em;
         }
         
-        .button:hover {
-            background-color: #3e8e41;
+        .info {
+            background-color: #f0f7ff;
+            border-left: 4px solid var(--info-color);
+            padding: 0.8em 1em;
+            margin: 1em 0;
+        }
+        
+        .info-title {
+            color: var(--info-color);
+            font-weight: bold;
+            margin-bottom: 0.5em;
+        }
+        
+        .version {
+            font-size: 1.2rem;
+            color: #666;
+            margin-top: 0.5rem;
         }
         
         footer {
-            background-color: #f0f0f0;
-            padding: 10px;
             text-align: center;
-            border-top: 1px solid #ddd;
-            font-size: 12px;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
             color: #666;
+            font-size: 0.9rem;
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>Web-Based Browser Tool</h1>
-        <div class="developer">Educational Project Documentation</div>
-    </header>
-    
-    <main>
-        <div class="content-box">
-            <h2>Project Overview</h2>
-            <p>This tool is a web-based browser application that allows browsing the internet through a simple iframe interface. It includes privacy-enhancing features and a stealth mode to prevent monitoring of your browsing activity.</p>
-            
-            <div class="warning">
-                <strong>Educational Purposes Only:</strong> This tool is for educational purposes and to demonstrate web privacy concepts. Using this tool to circumvent monitoring may violate your school's acceptable use policies.
-            </div>
+    <div class="container">
+        <header>
+            <h1>Blackout</h1>
+            <div class="version">Version 2.0.0</div>
+            <p>Advanced browsing protection system</p>
+        </header>
+        
+        <div class="warning">
+            <div class="warning-title">⚠️ Disclaimer</div>
+            <p>This tool is created for educational purposes only. Using Blackout may violate your school or organization's acceptable use policy. Use at your own risk.</p>
         </div>
         
-        <div class="content-box">
-            <h2>How to Use</h2>
-            <ol>
-                <li><strong>Basic Version (index.html):</strong>
-                    <ul>
-                        <li>Simple interface with stealth mode toggle</li>
-                        <li>Enter URLs in the address bar and click GO</li>
-                        <li>When GoGuardian monitoring is detected, the screen will temporarily appear black to them</li>
-                        <li>Use the Bypass Mode toggle to keep browsing even when monitoring is detected</li>
-                    </ul>
-                </li>
-                
-                <li><strong>Advanced Version (advanced.html):</strong>
-                    <ul>
-                        <li>More sophisticated monitoring detection</li>
-                        <li>Disguised as a document viewer</li>
-                        <li>Dark theme option</li>
-                        <li>Bypass Mode toggle to continue browsing when GoGuardian is active</li>
-                        <li>Secret key combination: Press 'z' three times quickly to manually toggle stealth mode</li>
-                    </ul>
-                </li>
-                
-                <li><strong>Terminal Version (terminal.html):</strong>
-                    <ul>
-                        <li>Command-line interface that appears as a legitimate terminal</li>
-                        <li>Type 'help' to see available commands</li>
-                        <li>Use 'browse [url]' to navigate to websites</li>
-                        <li>Type 'bypass' to toggle the bypass mode on/off</li>
-                        <li>Press Esc three times quickly as an emergency shortcut</li>
-                        <li>Command history with arrow keys</li>
-                        <li>Tab completion for commands</li>
-                    </ul>
-                </li>
-            </ol>
-            
-            <div class="tip">
-                <strong>Tip:</strong> The terminal version provides the best camouflage in school environments, as it looks like a legitimate programming tool. With Bypass Mode enabled, you can continue browsing even if GoGuardian is actively monitoring.
-            </div>
+        <h2>Introduction</h2>
+        <p>Blackout is a browser-based protection system designed to provide distraction-free browsing while protecting your privacy from monitoring software such as GoGuardian. The 2.0.0 update brings multiple interface themes, enhanced detection capabilities, and a more robust protection system.</p>
+        
+        <h2>New Features in 2.0.0</h2>
+        <ul>
+            <li><strong>Multiple Interface Themes</strong> - Choose between Terminal, Document, and Editor themes</li>
+            <li><strong>GoGuardian Dependency</strong> - Requires GoGuardian to be installed for full functionality (or use secret code)</li>
+            <li><strong>Improved Mouse Movement Detection</strong> - Fewer false positives in monitoring detection</li>
+            <li><strong>Enhanced "secret" Command</strong> - Added more functionality and developer options</li>
+            <li><strong>Fixed Ctrl+C Functionality</strong> - Now properly exits browser mode in terminal</li>
+            <li><strong>Integrated Unblocker Services</strong> - Access restricted sites using built-in proxy options</li>
+            <li><strong>More Realistic Interfaces</strong> - Redesigned to look like standard applications</li>
+        </ul>
+        
+        <h2>Themes</h2>
+        <p>Blackout 2.0.0 includes three main themes that can be switched between:</p>
+        
+        <h3>Terminal Theme</h3>
+        <p>A command-line interface with advanced features:</p>
+        <ul>
+            <li>Command-driven navigation</li>
+            <li>Integrated browser capability</li>
+            <li>Advanced monitoring detection</li>
+            <li>Secret commands for additional functionality</li>
+        </ul>
+        
+        <h3>Document Theme</h3>
+        <p>Appears as a standard document viewer:</p>
+        <ul>
+            <li>Clean, professional interface</li>
+            <li>Simulated document editing environment</li>
+            <li>Side navigation with document folders</li>
+            <li>Looks like a legitimate work environment</li>
+        </ul>
+        
+        <h3>Editor Theme</h3>
+        <p>A code editor interface for technical environments:</p>
+        <ul>
+            <li>Code syntax highlighting</li>
+            <li>File explorer panel</li>
+            <li>Tab-based file navigation</li>
+            <li>Status bar with developer information</li>
+        </ul>
+        
+        <h2>GoGuardian Dependency</h2>
+        <p>Blackout 2.0.0 implements a security feature that requires the GoGuardian extension to be installed and active for full functionality. This helps ensure the tool is only used in environments where protection is actually needed.</p>
+        
+        <h3>Bypass with Secret Code</h3>
+        <p>If you need to use Blackout without GoGuardian installed (for testing or development), you can use the secret key sequence "<code>lights-out</code>" to bypass this requirement.</p>
+        
+        <h2>Bypass Mode</h2>
+        <p>Bypass Mode allows content to remain visible even when monitoring is detected. This is useful when:</p>
+        <ul>
+            <li>You need to view content without interruption</li>
+            <li>You're experiencing false positive detections</li>
+            <li>You're in a controlled environment where monitoring is expected</li>
+        </ul>
+        
+        <p>To toggle Bypass Mode:</p>
+        <ul>
+            <li>In Terminal theme: Use the <code>bypass</code> command</li>
+            <li>In Document/Editor themes: Use the settings menu</li>
+        </ul>
+        
+        <div class="info">
+            <div class="info-title">ℹ️ Note</div>
+            <p>Bypass Mode is enabled by default in this version. When enabled, monitoring software will see your active browser window, but you'll still receive notifications when monitoring is detected.</p>
         </div>
         
-        <div class="content-box">
-            <h2>Features</h2>
-            <ul>
-                <li><strong>Stealth Mode:</strong> Hides your browsing when monitoring is detected</li>
-                <li><strong>Bypass Mode:</strong> Allows browsing even when GoGuardian is active (new feature)</li>
-                <li><strong>Monitoring Detection:</strong> Uses various techniques to detect when your screen is being monitored</li>
-                <li><strong>Deception Layer:</strong> Shows an innocent "Document Viewer" or "Terminal" screen to monitoring software</li>
-                <li><strong>Domain Blocking:</strong> Prevents connections to monitoring domains</li>
-                <li><strong>Multiple Interfaces:</strong> Choose between standard, document viewer, or terminal interfaces</li>
-            </ul>
-        </div>
+        <h2>Terminal Commands</h2>
+        <p>The Terminal theme provides the following commands:</p>
         
-        <div class="content-box">
-            <h2>Terminal Commands</h2>
-            <p>The terminal version offers a realistic command-line experience with the following commands:</p>
-            
-            <ul>
-                <li><strong>help:</strong> Display list of available commands</li>
-                <li><strong>browse [url]:</strong> Open browser mode with optional URL (e.g., browse google.com)</li>
-                <li><strong>status:</strong> Display current protection status</li>
-                <li><strong>stealth:</strong> Toggle stealth mode on/off</li>
-                <li><strong>clear/cls:</strong> Clear terminal output</li>
-                <li><strong>emergency:</strong> Immediately block screen</li>
-                <li><strong>about:</strong> Display information about the tool</li>
-                <li><strong>Ctrl+C:</strong> Cancel current command or exit browser mode</li>
-            </ul>
-        </div>
+        <table>
+            <tr>
+                <th>Command</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td><code>help</code></td>
+                <td>Show available commands</td>
+            </tr>
+            <tr>
+                <td><code>browse [url]</code></td>
+                <td>Open browser with optional URL</td>
+            </tr>
+            <tr>
+                <td><code>status</code></td>
+                <td>Display current protection status</td>
+            </tr>
+            <tr>
+                <td><code>stealth</code></td>
+                <td>Toggle stealth mode on/off</td>
+            </tr>
+            <tr>
+                <td><code>bypass</code></td>
+                <td>Toggle monitoring bypass mode</td>
+            </tr>
+            <tr>
+                <td><code>check</code></td>
+                <td>Check for GoGuardian extension</td>
+            </tr>
+            <tr>
+                <td><code>clear</code></td>
+                <td>Clear terminal output</td>
+            </tr>
+            <tr>
+                <td><code>emergency</code></td>
+                <td>Immediately block screen</td>
+            </tr>
+            <tr>
+                <td><code>update</code></td>
+                <td>Show update information</td>
+            </tr>
+            <tr>
+                <td><code>about</code></td>
+                <td>Show information about this tool</td>
+            </tr>
+            <tr>
+                <td><code>secret</code></td>
+                <td>Access secret developer options</td>
+            </tr>
+        </table>
         
-        <div class="content-box">
-            <h2>Technical Details</h2>
-            <p>The tool works by containing your browsing within an iframe, which makes it difficult for monitoring software to see what you're browsing. Additionally, it employs several techniques to detect monitoring activity:</p>
-            
-            <ul>
-                <li>Focus/blur detection to identify screen capture attempts</li>
-                <li>Mutation observers to detect monitoring scripts</li>
-                <li>Mouse movement analysis to identify automated control</li>
-                <li>DOM scanning for monitoring-related elements</li>
-            </ul>
-            
-            <p>When monitoring is detected, the tool displays a deception layer that appears to be an innocent application.</p>
-        </div>
+        <h3>Secret Commands</h3>
+        <p>The <code>secret</code> command provides additional advanced functionality:</p>
         
-        <div class="button-container">
-            <a href="index.html" class="button">Launch Basic Version</a>
-            <a href="advanced.html" class="button">Launch Advanced Version</a>
-            <a href="terminal.html" class="button">Launch Terminal Version</a>
-        </div>
-    </main>
-    
-    <footer>
-        Educational Project Documentation | For demonstration purposes only
-    </footer>
+        <table>
+            <tr>
+                <th>Command</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td><code>secret help</code></td>
+                <td>Show secret commands</td>
+            </tr>
+            <tr>
+                <td><code>secret unlock</code></td>
+                <td>Force unlock all features</td>
+            </tr>
+            <tr>
+                <td><code>secret block</code></td>
+                <td>Simulate monitoring detection</td>
+            </tr>
+            <tr>
+                <td><code>secret reset</code></td>
+                <td>Reset all settings</td>
+            </tr>
+            <tr>
+                <td><code>secret bypass</code></td>
+                <td>Toggle bypass mode</td>
+            </tr>
+            <tr>
+                <td><code>secret monitor</code></td>
+                <td>Show detected monitoring elements</td>
+            </tr>
+            <tr>
+                <td><code>secret theme</code></td>
+                <td>Change terminal appearance</td>
+            </tr>
+        </table>
+        
+        <h2>Known Limitations</h2>
+        <p>Please be aware of the following limitations:</p>
+        <ul>
+            <li>Browser-based protection has inherent limitations and cannot completely prevent all forms of monitoring</li>
+            <li>Some features may not work consistently across all browsers and devices</li>
+            <li>Aggressive monitoring software may detect and block Blackout</li>
+            <li>Detection is based on patterns and may occasionally produce false positives or negatives</li>
+        </ul>
+        
+        <footer>
+            Blackout v2.0.0 | For educational purposes only
+        </footer>
+    </div>
 </body>
 </html> 
