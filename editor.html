@@ -507,6 +507,7 @@
                 <div class="status-section">
                     <div class="status-item">Ln 7, Col 3</div>
                     <div class="status-item">Spaces: 2</div>
+                    <div class="status-item">v2.1.0</div>
                 </div>
             </div>
         </div>
@@ -527,7 +528,7 @@
             // State
             let extensionDetected = false;
             let monitoringDetected = false;
-            let bypassMode = false;
+            let bypassMode = true; // Default to true for bypass mode
             let secretModeActive = false;
             
             /* Keep scrolling. The page doesn't end where you think. */
@@ -537,6 +538,8 @@
                 try {
                     // Try to get status from parent frame
                     extensionDetected = window.parent.extensionDetected || false;
+                    bypassMode = window.parent.bypassMode || true;
+                    secretModeActive = window.parent.secretModeActive || false;
                 } catch (e) {
                     // If we can't access parent, assume we need to check ourselves
                     checkForGoGuardian();
@@ -552,7 +555,12 @@
                     '[id*="teacher-"], [class*="teacher-"]'
                 );
                 
-                extensionDetected = ggElements.length > 0;
+                // If secret mode is active, force extension detected to be true
+                if (secretModeActive) {
+                    extensionDetected = true;
+                } else {
+                    extensionDetected = ggElements.length > 0;
+                }
             }
             
             // Setup monitoring detection
@@ -621,6 +629,46 @@
                 }
             }
             
+            // Secret code detection
+            let secretCode = '';
+            let secretTimeout;
+            
+            document.addEventListener('keydown', (e) => {
+                if (secretTimeout) clearTimeout(secretTimeout);
+                
+                // Add to secret code
+                secretCode += e.key.toLowerCase();
+                
+                // Trim to reasonable length
+                if (secretCode.length > 20) {
+                    secretCode = secretCode.substring(secretCode.length - 20);
+                }
+                
+                // Check for secret activation sequence
+                if (secretCode.includes('lights-out')) {
+                    secretModeActive = true;
+                    extensionDetected = true;
+                    bypassMode = true;
+                    console.log('Secret mode activated');
+                    secretCode = '';
+                    
+                    // Try to notify parent if possible
+                    try {
+                        if (window.parent && window.parent.secretModeActive !== undefined) {
+                            window.parent.secretModeActive = true;
+                            window.parent.extensionDetected = true;
+                        }
+                    } catch (e) {
+                        // Ignore cross-origin errors
+                    }
+                }
+                
+                // Set timeout to clear code
+                secretTimeout = setTimeout(() => {
+                    secretCode = '';
+                }, 2000);
+            });
+            
             // Add interactive elements
             function setupInteractions() {
                 // Make tabs interactive
@@ -648,32 +696,6 @@
                         files.forEach(f => f.classList.remove('active'));
                         this.classList.add('active');
                     });
-                });
-                
-                // Secret code detection
-                let secretCode = '';
-                let secretTimeout;
-                
-                document.addEventListener('keydown', e => {
-                    if (secretTimeout) clearTimeout(secretTimeout);
-                    
-                    secretCode += e.key.toLowerCase();
-                    
-                    /* There's a div here that only shows at 3:33AM. */
-                    
-                    if (secretCode.length > 20) {
-                        secretCode = secretCode.substring(secretCode.length - 20);
-                    }
-                    
-                    if (secretCode.includes('lights-out')) {
-                        secretModeActive = true;
-                        console.log('Secret mode activated');
-                        secretCode = '';
-                    }
-                    
-                    secretTimeout = setTimeout(() => {
-                        secretCode = '';
-                    }, 2000);
                 });
             }
             

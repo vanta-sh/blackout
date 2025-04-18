@@ -6,262 +6,352 @@
     <title>Blackout Documentation</title>
     <style>
         :root {
-            --bg-color: #f9f9f9;
-            --text-color: #333;
-            --heading-color: #111;
-            --link-color: #0066cc;
-            --code-bg: #f0f0f0;
-            --border-color: #ddd;
-            --warning-color: #f44336;
-            --success-color: #4caf50;
-            --info-color: #2196f3;
+            /* Dark mode colors */
+            --primary-bg: #121212;
+            --secondary-bg: #1e1e1e;
+            --text-color: #d8d8d8;
+            --secondary-text: #a0a0a0;
+            --accent-color: #4a6fa5;
+            --button-color: #2c5282;
+            --button-hover: #3a6ea5;
+            --error-color: #e53e3e;
+            --success-color: #38a169;
+            --warning-color: #d69e2e;
+            --border-color: #333;
+            --input-bg: #2d2d2d;
             --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            --mono-font: 'Consolas', 'Courier New', monospace;
         }
         
         * {
             box-sizing: border-box;
-        }
-        
-        body {
-            font-family: var(--font-family);
-            line-height: 1.6;
-            color: var(--text-color);
-            background-color: var(--bg-color);
             margin: 0;
             padding: 0;
         }
         
+        body {
+            font-family: var(--font-family);
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
         .container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 0 20px;
+            width: 100%;
+            flex: 1;
         }
         
         header {
-            text-align: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
+            background-color: var(--secondary-bg);
+            padding: 15px 0;
             border-bottom: 1px solid var(--border-color);
         }
         
-        h1, h2, h3, h4 {
-            color: var(--heading-color);
-            margin-top: 1.5em;
-            margin-bottom: 0.5em;
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .nav-links a {
+            color: var(--text-color);
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        main {
+            padding: 40px 0;
         }
         
         h1 {
-            font-size: 2.5rem;
-            margin-top: 0;
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+            color: var(--text-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
         }
         
         h2 {
             font-size: 1.8rem;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 0.3em;
+            margin: 30px 0 15px;
+            color: var(--text-color);
         }
         
         h3 {
-            font-size: 1.3rem;
-        }
-        
-        h4 {
-            font-size: 1.1rem;
+            font-size: 1.4rem;
+            margin: 25px 0 10px;
+            color: var(--text-color);
         }
         
         p {
-            margin: 1em 0;
-        }
-        
-        a {
-            color: var(--link-color);
-            text-decoration: none;
-        }
-        
-        a:hover {
-            text-decoration: underline;
-        }
-        
-        code {
-            font-family: var(--mono-font);
-            background-color: var(--code-bg);
-            padding: 0.2em 0.4em;
-            border-radius: 3px;
-            font-size: 0.9em;
-        }
-        
-        pre {
-            background-color: var(--code-bg);
-            padding: 1rem;
-            border-radius: 4px;
-            overflow-x: auto;
-            font-family: var(--mono-font);
-            font-size: 0.9rem;
-            line-height: 1.5;
-        }
-        
-        blockquote {
-            border-left: 4px solid var(--border-color);
-            margin: 0;
-            padding: 0 1em;
-            color: #555;
+            margin-bottom: 15px;
         }
         
         ul, ol {
-            padding-left: 2em;
+            margin: 0 0 20px 20px;
         }
         
         li {
-            margin: 0.5em 0;
+            margin-bottom: 8px;
         }
         
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin: 1em 0;
+        code {
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.9em;
         }
         
-        table, th, td {
-            border: 1px solid var(--border-color);
-        }
-        
-        th, td {
-            padding: 0.5em;
-            text-align: left;
-        }
-        
-        th {
-            background-color: #f0f0f0;
+        .note {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-left: 4px solid var(--accent-color);
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
         }
         
         .warning {
-            background-color: #fff8f8;
+            background-color: rgba(255, 193, 7, 0.1);
             border-left: 4px solid var(--warning-color);
-            padding: 0.8em 1em;
-            margin: 1em 0;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
         }
         
-        .warning-title {
-            color: var(--warning-color);
-            font-weight: bold;
-            margin-bottom: 0.5em;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
         }
         
-        .info {
-            background-color: #f0f7ff;
-            border-left: 4px solid var(--info-color);
-            padding: 0.8em 1em;
-            margin: 1em 0;
+        th, td {
+            text-align: left;
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
         }
         
-        .info-title {
-            color: var(--info-color);
-            font-weight: bold;
-            margin-bottom: 0.5em;
+        th {
+            background-color: var(--secondary-bg);
+            font-weight: 600;
         }
         
-        .version {
+        tr:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+        
+        .kbd {
+            display: inline-block;
+            background-color: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            box-shadow: 0 1px 1px rgba(0,0,0,.2);
+            color: var(--text-color);
+            font-family: monospace;
+            font-size: 0.85em;
+            font-weight: 600;
+            line-height: 1;
+            padding: 3px 6px;
+            margin: 0 2px;
+        }
+        
+        .tag {
+            display: inline-block;
+            background-color: var(--accent-color);
+            color: white;
+            font-size: 0.8em;
+            padding: 3px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .feature-card {
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .feature-title {
             font-size: 1.2rem;
-            color: #666;
-            margin-top: 0.5rem;
+            margin-bottom: 10px;
+            font-weight: 600;
         }
         
-        footer {
-            text-align: center;
-            margin-top: 2rem;
-            padding-top: 1rem;
+        .status-bar {
+            height: 25px;
+            background-color: var(--secondary-bg);
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            align-items: center;
+            font-size: 12px;
+            color: var(--secondary-text);
             border-top: 1px solid var(--border-color);
-            color: #666;
-            font-size: 0.9rem;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        .status-indicator.active {
+            background-color: var(--success-color);
+            box-shadow: 0 0 4px var(--success-color);
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Blackout</h1>
-            <div class="version">Version 2.0.0</div>
-            <p>Advanced browsing protection system</p>
-        </header>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">Blackout</a>
+                <div class="nav-links">
+                    <a href="editor.html">Editor</a>
+                    <a href="advanced.html">Advanced</a>
+                    <a href="terminal.html">Terminal</a>
+                    <a href="README.html">Help</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+    
+    <main class="container">
+        <h1>Blackout Documentation <span class="tag">v2.1.0</span></h1>
         
+        <p>
+            Welcome to Blackout - a secure and private educational web environment. This documentation
+            provides detailed information about the features, usage, and capabilities of the Blackout
+            application.
+        </p>
+        
+        <div class="note">
+            <strong>Note:</strong> Blackout is designed for educational purposes and to provide a
+            protected browsing experience. It should be used responsibly and in accordance with your
+            institution's policies.
+        </div>
+        
+        <h2>What's New in v2.1.0</h2>
+        
+        <div class="feature-list">
+            <div class="feature-card">
+                <div class="feature-title">Dark Mode by Default</div>
+                <p>The entire application now uses a sleek dark theme for improved visibility and reduced eye strain in various lighting conditions.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-title">Lights-Out Mode</div>
+                <p>Type "lights-out" anywhere in the application to enable enhanced bypass capabilities when monitoring software is detected.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-title">Enhanced Detection</div>
+                <p>Improved monitoring detection with sophisticated pattern recognition for mouse movements, network requests, and DOM changes.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-title">Status Bar</div>
+                <p>Added a status bar that shows the current stealth status and monitoring detection state at all times.</p>
+            </div>
+        </div>
+        
+        <h2>Features</h2>
+        
+        <h3>Monitoring Detection</h3>
+        <p>
+            Blackout includes advanced monitoring detection that can identify when your screen is
+            being monitored by software like GoGuardian, Securly, or other classroom management tools.
+            Detection methods include:
+        </p>
+        <ul>
+            <li>Pattern recognition for mouse movements to detect automated monitoring</li>
+            <li>Network request monitoring to identify monitoring-related communication</li>
+            <li>DOM element detection to identify monitoring extension elements</li>
+            <li>Focus/blur event analysis to detect screenshots and screen recording</li>
+            <li>Canvas fingerprinting detection</li>
+            <li>WebSocket connection monitoring</li>
+        </ul>
+        
+        <h3>Stealth Mode</h3>
+        <p>
+            When monitoring is detected, Blackout can hide content from the monitoring software while 
+            displaying a message to you. This allows you to maintain privacy while being monitored.
+        </p>
+        <p>
+            Stealth mode is enabled by default but can be toggled off if desired. When active, the application
+            will automatically hide content when monitoring is detected.
+        </p>
+        
+        <h3>Bypass Mode</h3>
+        <p>
+            Bypass mode allows you to continue using Blackout even when monitoring is detected. This mode
+            is useful when you need to work on permitted content but still want the monitoring detection 
+            capabilities.
+        </p>
+        <p>
+            <strong>Important:</strong> When bypass mode is active, monitoring software can see your 
+            screen content. Only use bypass mode for appropriate content that complies with your 
+            institution's policies.
+        </p>
+        <p>
+            Bypass mode is enabled by default in version 2.1.0 to provide more flexibility in usage.
+        </p>
+        
+        <h3>Lights-Out Mode <span class="tag">New</span></h3>
+        <p>
+            Type "lights-out" anywhere in the application to activate an enhanced bypass mode that works
+            even when standard detection methods might fail. This feature is useful in environments with
+            aggressive monitoring software.
+        </p>
         <div class="warning">
-            <div class="warning-title">⚠️ Disclaimer</div>
-            <p>This tool is created for educational purposes only. Using Blackout may violate your school or organization's acceptable use policy. Use at your own risk.</p>
+            <strong>Warning:</strong> Lights-Out mode forces the system to enable bypass mode, which means 
+            your screen content will be visible to monitoring software. Use this feature responsibly.
         </div>
         
-        <h2>Introduction</h2>
-        <p>Blackout is a browser-based protection system designed to provide distraction-free browsing while protecting your privacy from monitoring software such as GoGuardian. The 2.0.0 update brings multiple interface themes, enhanced detection capabilities, and a more robust protection system.</p>
-        
-        <h2>New Features in 2.0.0</h2>
-        <ul>
-            <li><strong>Multiple Interface Themes</strong> - Choose between Terminal, Document, and Editor themes</li>
-            <li><strong>GoGuardian Dependency</strong> - Requires GoGuardian to be installed for full functionality (or use secret code)</li>
-            <li><strong>Improved Mouse Movement Detection</strong> - Fewer false positives in monitoring detection</li>
-            <li><strong>Enhanced "secret" Command</strong> - Added more functionality and developer options</li>
-            <li><strong>Fixed Ctrl+C Functionality</strong> - Now properly exits browser mode in terminal</li>
-            <li><strong>Integrated Unblocker Services</strong> - Access restricted sites using built-in proxy options</li>
-            <li><strong>More Realistic Interfaces</strong> - Redesigned to look like standard applications</li>
-        </ul>
-        
-        <h2>Themes</h2>
-        <p>Blackout 2.0.0 includes three main themes that can be switched between:</p>
-        
-        <h3>Terminal Theme</h3>
-        <p>A command-line interface with advanced features:</p>
-        <ul>
-            <li>Command-driven navigation</li>
-            <li>Integrated browser capability</li>
-            <li>Advanced monitoring detection</li>
-            <li>Secret commands for additional functionality</li>
-        </ul>
-        
-        <h3>Document Theme</h3>
-        <p>Appears as a standard document viewer:</p>
-        <ul>
-            <li>Clean, professional interface</li>
-            <li>Simulated document editing environment</li>
-            <li>Side navigation with document folders</li>
-            <li>Looks like a legitimate work environment</li>
-        </ul>
-        
-        <h3>Editor Theme</h3>
-        <p>A code editor interface for technical environments:</p>
-        <ul>
-            <li>Code syntax highlighting</li>
-            <li>File explorer panel</li>
-            <li>Tab-based file navigation</li>
-            <li>Status bar with developer information</li>
-        </ul>
-        
-        <h2>GoGuardian Dependency</h2>
-        <p>Blackout 2.0.0 implements a security feature that requires the GoGuardian extension to be installed and active for full functionality. This helps ensure the tool is only used in environments where protection is actually needed.</p>
-        
-        <h3>Bypass with Secret Code</h3>
-        <p>If you need to use Blackout without GoGuardian installed (for testing or development), you can use the secret key sequence "<code>lights-out</code>" to bypass this requirement.</p>
-        
-        <h2>Bypass Mode</h2>
-        <p>Bypass Mode allows content to remain visible even when monitoring is detected. This is useful when:</p>
-        <ul>
-            <li>You need to view content without interruption</li>
-            <li>You're experiencing false positive detections</li>
-            <li>You're in a controlled environment where monitoring is expected</li>
-        </ul>
-        
-        <p>To toggle Bypass Mode:</p>
-        <ul>
-            <li>In Terminal theme: Use the <code>bypass</code> command</li>
-            <li>In Document/Editor themes: Use the settings menu</li>
-        </ul>
-        
-        <div class="info">
-            <div class="info-title">ℹ️ Note</div>
-            <p>Bypass Mode is enabled by default in this version. When enabled, monitoring software will see your active browser window, but you'll still receive notifications when monitoring is detected.</p>
-        </div>
-        
-        <h2>Terminal Commands</h2>
-        <p>The Terminal theme provides the following commands:</p>
-        
+        <h3>Terminal Interface</h3>
+        <p>
+            The terminal interface provides a command-line experience for interacting with Blackout.
+            Key commands include:
+        </p>
         <table>
             <tr>
                 <th>Command</th>
@@ -269,100 +359,90 @@
             </tr>
             <tr>
                 <td><code>help</code></td>
-                <td>Show available commands</td>
+                <td>Display available commands and usage information</td>
             </tr>
             <tr>
                 <td><code>browse [url]</code></td>
-                <td>Open browser with optional URL</td>
+                <td>Open a specified URL in the terminal interface</td>
             </tr>
             <tr>
                 <td><code>status</code></td>
-                <td>Display current protection status</td>
+                <td>Display current system status, including monitoring detection</td>
             </tr>
             <tr>
-                <td><code>stealth</code></td>
-                <td>Toggle stealth mode on/off</td>
+                <td><code>stealth [on|off]</code></td>
+                <td>Enable or disable stealth mode</td>
             </tr>
             <tr>
-                <td><code>bypass</code></td>
-                <td>Toggle monitoring bypass mode</td>
-            </tr>
-            <tr>
-                <td><code>check</code></td>
-                <td>Check for GoGuardian extension</td>
+                <td><code>bypass [on|off]</code></td>
+                <td>Enable or disable bypass mode</td>
             </tr>
             <tr>
                 <td><code>clear</code></td>
-                <td>Clear terminal output</td>
+                <td>Clear the terminal screen</td>
             </tr>
             <tr>
                 <td><code>emergency</code></td>
-                <td>Immediately block screen</td>
-            </tr>
-            <tr>
-                <td><code>update</code></td>
-                <td>Show update information</td>
-            </tr>
-            <tr>
-                <td><code>about</code></td>
-                <td>Show information about this tool</td>
-            </tr>
-            <tr>
-                <td><code>secret</code></td>
-                <td>Access secret developer options</td>
+                <td>Activate emergency screen blocking</td>
             </tr>
         </table>
         
-        <h3>Secret Commands</h3>
-        <p>The <code>secret</code> command provides additional advanced functionality:</p>
+        <h2>Usage Tips</h2>
         
-        <table>
-            <tr>
-                <th>Command</th>
-                <th>Description</th>
-            </tr>
-            <tr>
-                <td><code>secret help</code></td>
-                <td>Show secret commands</td>
-            </tr>
-            <tr>
-                <td><code>secret unlock</code></td>
-                <td>Force unlock all features</td>
-            </tr>
-            <tr>
-                <td><code>secret block</code></td>
-                <td>Simulate monitoring detection</td>
-            </tr>
-            <tr>
-                <td><code>secret reset</code></td>
-                <td>Reset all settings</td>
-            </tr>
-            <tr>
-                <td><code>secret bypass</code></td>
-                <td>Toggle bypass mode</td>
-            </tr>
-            <tr>
-                <td><code>secret monitor</code></td>
-                <td>Show detected monitoring elements</td>
-            </tr>
-            <tr>
-                <td><code>secret theme</code></td>
-                <td>Change terminal appearance</td>
-            </tr>
-        </table>
-        
-        <h2>Known Limitations</h2>
-        <p>Please be aware of the following limitations:</p>
+        <h3>Keyboard Shortcuts</h3>
+        <p>
+            Several keyboard shortcuts are available for quick actions:
+        </p>
         <ul>
-            <li>Browser-based protection has inherent limitations and cannot completely prevent all forms of monitoring</li>
-            <li>Some features may not work consistently across all browsers and devices</li>
-            <li>Aggressive monitoring software may detect and block Blackout</li>
-            <li>Detection is based on patterns and may occasionally produce false positives or negatives</li>
+            <li><span class="kbd">Alt</span> + <span class="kbd">S</span> - Toggle stealth mode</li>
+            <li><span class="kbd">Alt</span> + <span class="kbd">B</span> - Toggle bypass mode</li>
+            <li><span class="kbd">Alt</span> + <span class="kbd">E</span> - Emergency screen blocking</li>
+            <li><span class="kbd">Escape</span> - Clear current input in terminal mode</li>
         </ul>
         
-        <footer>
-            Blackout v2.0.0 | For educational purposes only
-        </footer>
+        <h3>Best Practices</h3>
+        <ul>
+            <li>Use bypass mode only for appropriate content that complies with your institution's policies</li>
+            <li>Be aware that typing "lights-out" enables bypass mode, making your screen visible to monitoring software</li>
+            <li>The terminal interface provides the most discreet browsing experience</li>
+            <li>Check the status bar regularly to be aware of your current stealth and monitoring status</li>
+            <li>Use the emergency command or shortcut if you need to quickly hide content</li>
+        </ul>
+        
+        <div class="note">
+            <strong>Remember:</strong> Blackout is designed to provide a private browsing experience while helping you 
+            understand when your screen is being monitored. Use these capabilities responsibly.
+        </div>
+        
+        <h2>Troubleshooting</h2>
+        
+        <h3>False Positive Detections</h3>
+        <p>
+            If you experience false positive monitoring detections:
+        </p>
+        <ul>
+            <li>Try refreshing the page to reset the detection algorithms</li>
+            <li>Use bypass mode temporarily to continue working without interruptions</li>
+            <li>Check if other browser extensions might be triggering the detection system</li>
+        </ul>
+        
+        <h3>Performance Issues</h3>
+        <p>
+            The advanced monitoring detection systems in Blackout may affect performance on older devices.
+            If you experience performance issues:
+        </p>
+        <ul>
+            <li>Use the basic editor interface instead of the terminal for better performance</li>
+            <li>Close other browser tabs and applications to free up system resources</li>
+            <li>Consider using bypass mode to reduce the active monitoring checks</li>
+        </ul>
+    </main>
+    
+    <div class="status-bar">
+        <div class="status-item">
+            <span class="status-indicator active"></span>
+            <span>Documentation v2.1.0</span>
+        </div>
     </div>
 </body>
 </html> 

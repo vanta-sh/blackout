@@ -5,211 +5,98 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document Viewer</title> <!-- Innocuous title -->
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f7f9fc;
-            color: #333;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            transition: background-color 0.5s;
+        :root {
+            /* Dark mode colors */
+            --primary-bg: #121212;
+            --secondary-bg: #1e1e1e;
+            --text-color: #d8d8d8;
+            --secondary-text: #a0a0a0;
+            --accent-color: #4a6fa5;
+            --button-color: #2c5282;
+            --button-hover: #3a6ea5;
+            --error-color: #e53e3e;
+            --success-color: #38a169;
+            --warning-color: #d69e2e;
+            --border-color: #333;
+            --input-bg: #2d2d2d;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
-        .dark-mode {
-            background-color: #121212;
-            color: #f1f1f1;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: var(--font-family);
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            line-height: 1.6;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
         
         header {
-            background-color: #2196F3;
-            color: white;
-            padding: 15px;
-            text-align: center;
-            border-bottom: 1px solid #1a77c9;
-            position: relative;
-            transition: background-color 0.5s;
-        }
-        
-        .dark-mode header {
-            background-color: #000;
-            border-bottom: 1px solid #333;
-        }
-        
-        .header-title {
-            position: relative;
-            display: inline-block;
-        }
-        
-        .visible-title {
-            margin: 0;
-            font-size: 24px;
-        }
-        
-        .hidden-title {
-            position: absolute;
-            top: 0;
-            left: 0;
-            margin: 0;
-            font-size: 24px;
-            opacity: 0;
-            pointer-events: none;
-        }
-        
-        .dark-mode .hidden-title {
-            opacity: 1;
-        }
-        
-        .dark-mode .visible-title {
-            opacity: 0;
-        }
-        
-        main {
-            flex: 1;
-            padding: 20px;
-            max-width: 1000px;
-            margin: 0 auto;
-            width: 90%;
-        }
-        
-        .container {
-            display: flex;
-            gap: 20px;
-            flex-direction: column;
-        }
-        
-        @media (min-width: 768px) {
-            .container {
-                flex-direction: row;
-            }
-            
-            .controls {
-                width: 30%;
-            }
-            
-            .content {
-                width: 70%;
-            }
-        }
-        
-        .controls {
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            transition: background-color 0.5s;
-        }
-        
-        .dark-mode .controls {
-            background-color: #1e1e1e;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        }
-        
-        .url-input {
-            display: flex;
-            margin-bottom: 20px;
-        }
-        
-        #url-box {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px 0 0 5px;
-            transition: background-color 0.5s, border-color 0.5s;
-        }
-        
-        .dark-mode #url-box {
-            background-color: #333;
-            color: #fff;
-            border-color: #555;
-        }
-        
-        #go-button {
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 0 5px 5px 0;
-            cursor: pointer;
-        }
-        
-        .content {
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            transition: background-color 0.5s;
-        }
-        
-        .dark-mode .content {
-            background-color: #1e1e1e;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        }
-        
-        .content-header {
-            padding: 15px;
-            border-bottom: 1px solid #eee;
+            background-color: var(--secondary-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: border-color 0.5s;
         }
         
-        .dark-mode .content-header {
-            border-color: #333;
+        .header-logo {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-color);
         }
         
-        .browser-container {
-            flex: 1;
-            min-height: 500px;
-        }
-        
-        iframe {
-            width: 100%;
-            height: 100%;
-            min-height: 500px;
-            border: none;
-        }
-        
-        .switch-container {
+        .header-controls {
             display: flex;
             align-items: center;
-            margin-bottom: 15px;
+            gap: 15px;
         }
         
-        .switch-label {
-            margin-right: 10px;
+        .stealth-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
-        .switch {
+        .toggle-label {
+            font-size: 0.9rem;
+            color: var(--secondary-text);
+        }
+        
+        .toggle-switch {
             position: relative;
             display: inline-block;
             width: 50px;
             height: 24px;
         }
         
-        .switch input {
+        .toggle-switch input {
             opacity: 0;
             width: 0;
             height: 0;
         }
         
-        .slider {
+        .toggle-slider {
             position: absolute;
             cursor: pointer;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
+            background-color: #444;
             border-radius: 24px;
+            transition: .4s;
         }
         
-        .slider:before {
+        .toggle-slider:before {
             position: absolute;
             content: "";
             height: 16px;
@@ -217,103 +104,169 @@
             left: 4px;
             bottom: 4px;
             background-color: white;
-            transition: .4s;
             border-radius: 50%;
+            transition: .4s;
         }
         
-        input:checked + .slider {
-            background-color: #2196F3;
+        input:checked + .toggle-slider {
+            background-color: var(--accent-color);
         }
         
-        input:checked + .slider:before {
+        input:checked + .toggle-slider:before {
             transform: translateX(26px);
         }
         
-        .status {
-            padding: 10px 15px;
-            border-radius: 5px;
-            margin-top: 15px;
-            font-size: 0.9em;
-            background-color: #f0f0f0;
-            transition: background-color 0.5s;
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
         
-        .dark-mode .status {
-            background-color: #333;
+        .browser-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border-color);
+            margin: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: var(--secondary-bg);
+        }
+        
+        .browser-toolbar {
+            display: flex;
+            padding: 10px;
+            gap: 10px;
+            background-color: var(--secondary-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .url-box {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 14px;
+        }
+        
+        .url-box:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+        
+        .go-button {
+            padding: 8px 16px;
+            background-color: var(--button-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        .go-button:hover {
+            background-color: var(--button-hover);
+        }
+        
+        .browser-frame-container {
+            flex: 1;
+            background-color: white;
+            position: relative;
+        }
+        
+        .browser-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .status-bar {
+            height: 25px;
+            background-color: var(--secondary-bg);
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            align-items: center;
+            font-size: 12px;
+            color: var(--secondary-text);
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        .status-indicator.active {
+            background-color: var(--success-color);
+            box-shadow: 0 0 4px var(--success-color);
+        }
+        
+        .status-indicator.inactive {
+            background-color: var(--error-color);
+            box-shadow: 0 0 4px var(--error-color);
+        }
+        
+        .status-indicator.warning {
+            background-color: var(--warning-color);
+            box-shadow: 0 0 4px var(--warning-color);
         }
         
         .deception-layer {
-            display: none;
-            position: fixed;
+            position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1000;
-            background-color: white;
-            flex-direction: column;
-        }
-        
-        .dark-mode .deception-layer {
-            background-color: #121212;
-        }
-        
-        .deception-header {
-            background-color: #2196F3;
-            color: white;
-            padding: 15px;
-            text-align: center;
-        }
-        
-        .dark-mode .deception-header {
-            background-color: #000;
-        }
-        
-        .deception-content {
-            flex: 1;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .document-icon {
-            font-size: 5em;
-            margin-bottom: 20px;
-            color: #2196F3;
-        }
-        
-        .dark-mode .document-icon {
-            color: #666;
-        }
-        
-        .notification {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: rgba(255, 0, 0, 0.8);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
+            right: 0;
+            bottom: 0;
+            background-color: var(--primary-bg);
+            z-index: 10;
             display: none;
-            z-index: 2000;
-        }
-        
-        footer {
-            background-color: #f0f0f0;
-            padding: 10px;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 20px;
             text-align: center;
-            border-top: 1px solid #ddd;
-            font-size: 12px;
-            color: #666;
-            transition: background-color 0.5s, border-color 0.5s;
+            font-size: 16px;
         }
         
-        .dark-mode footer {
-            background-color: #000;
-            border-color: #333;
-            color: #888;
+        .deception-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: var(--accent-color);
+        }
+        
+        .deception-message {
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+        
+        /* Hidden message only shows at certain times */
+        .hidden-message {
+            position: fixed;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: var(--primary-bg);
+            transition: bottom 0.3s;
+            user-select: none;
+            opacity: 0.5;
+        }
+        
+        body:hover .hidden-message {
+            bottom: 2px;
         }
     </style>
 </head>
@@ -392,6 +345,20 @@
         School Project Template | Educational Use Only
     </footer>
     
+    <div class="status-bar">
+        <div class="status-item">
+            <span class="status-indicator active" id="stealth-status-indicator"></span>
+            <span id="stealth-status-text">Stealth: Active</span>
+        </div>
+        <div class="status-item">
+            <span class="status-indicator inactive" id="monitor-status-indicator"></span>
+            <span id="monitor-status-text">Monitoring: None</span>
+        </div>
+        <div class="status-item">
+            <span>v2.1.0</span>
+        </div>
+    </div>
+    
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const stealthSwitch = document.getElementById('stealth-switch');
@@ -403,11 +370,17 @@
             const currentUrl = document.getElementById('current-url');
             const deceptionLayer = document.getElementById('deception-layer');
             const monitoringNotification = document.getElementById('monitoring-notification');
+            const stealthStatusIndicator = document.getElementById('stealth-status-indicator');
+            const stealthStatusText = document.getElementById('stealth-status-text');
+            const monitorStatusIndicator = document.getElementById('monitor-status-indicator');
+            const monitorStatusText = document.getElementById('monitor-status-text');
             
             let stealthMode = true;
             let lastKeyPressTime = 0;
             let monitoringDetected = false;
             let bypassMonitoring = true;
+            let secretModeActive = false;
+            let extensionDetected = false;
             
             // Set up mode switches
             stealthSwitch.addEventListener('change', function() {
@@ -664,6 +637,32 @@
                     statusDisplay.textContent = 'Stealth Mode Disabled: No protection active';
                     deceptionLayer.style.display = 'none';
                 }
+                
+                // Update stealth mode indicator
+                if (stealthMode) {
+                    stealthStatusIndicator.classList.remove('inactive');
+                    stealthStatusIndicator.classList.add('active');
+                    stealthStatusText.textContent = 'Stealth: Active';
+                } else {
+                    stealthStatusIndicator.classList.remove('active');
+                    stealthStatusIndicator.classList.add('inactive');
+                    stealthStatusText.textContent = 'Stealth: Inactive';
+                }
+                
+                // Update monitoring status indicator
+                if (monitoringDetected) {
+                    monitorStatusIndicator.classList.remove('inactive');
+                    monitorStatusIndicator.classList.add('warning');
+                    monitorStatusText.textContent = 'Monitoring: Detected';
+                } else {
+                    monitorStatusIndicator.classList.remove('warning');
+                    monitorStatusIndicator.classList.add('inactive');
+                    monitorStatusText.textContent = 'Monitoring: None';
+                }
+                
+                // Make the switches match the state
+                stealthSwitch.checked = stealthMode;
+                bypassSwitch.checked = bypassMonitoring;
             }
             
             // Additional anti-monitoring measures

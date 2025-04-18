@@ -3,274 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terminal</title>
+    <title>System Terminal</title>
     <style>
         :root {
-            --bg-color: #121212;
-            --text-color: #d8d8d8;
-            --prompt-color: #50fa7b;
-            --cursor-color: #f8f8f2;
-            --error-color: #ff5555;
-            --warning-color: #f1fa8c;
-            --success-color: #50fa7b;
-            --highlight-color: #8be9fd;
-            --selection-color: rgba(68, 71, 90, 0.5);
-            --header-color: #282a36;
-            --font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
-            --terminal-opacity: 0.98;
+            /* Dark mode (default) */
+            --bg-color: #0c0c0c;
+            --text-color: #33ff33;
+            --header-color: #5a5a5a;
+            --input-bg: #1a1a1a;
+            --status-bg: #1a1a1a;
+            --success-color: #33ff33;
+            --error-color: #ff3333;
+            --warning-color: #ffcc00;
+            --info-color: #33ccff;
+            --highlight-color: #ff9900;
+            --gray-color: #888888;
+            --border-color: #333333;
         }
         
+        body.light-mode {
+            /* Light mode */
+            --bg-color: #f0f0f0;
+            --text-color: #006600;
+            --header-color: #cccccc;
+            --input-bg: #ffffff;
+            --status-bg: #dddddd;
+            --success-color: #008800;
+            --error-color: #cc0000;
+            --warning-color: #cc8800;
+            --info-color: #0066cc;
+            --highlight-color: #cc6600;
+            --gray-color: #666666;
+            --border-color: #cccccc;
+        }
+        
+        /* Global styles */
         * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
-        }
-        
-        @font-face {
-            font-family: 'JetBrains Mono';
-            src: url('https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap');
+            font-family: 'Courier New', monospace;
+            transition: background-color 0.3s, color 0.3s;
         }
         
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            font-family: var(--font-family);
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+            height: 100vh;
             overflow: hidden;
         }
         
-        .terminal-container {
-            flex: 1;
+        /* Terminal container */
+        #terminal {
+            height: 100vh;
+            width: 100%;
             display: flex;
             flex-direction: column;
-            padding: 0;
-            width: 100%;
-            max-height: calc(100vh - 40px);
-            opacity: var(--terminal-opacity);
-            position: relative;
+            padding: 5px;
         }
         
-        .terminal-header {
+        /* Terminal header */
+        #terminal-header {
             background-color: var(--header-color);
-            padding: 8px 12px;
-            font-size: 14px;
-            color: white;
+            color: var(--bg-color);
+            padding: 5px 10px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #333;
-            user-select: none;
-            border-radius: 8px 8px 0 0;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
         }
         
-        .terminal-controls {
-            display: flex;
-        }
-        
-        .terminal-button {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-left: 8px;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        
-        .terminal-button:hover {
-            opacity: 0.7;
-        }
-        
-        .terminal-button.close {
-            background-color: #ff5f56;
-        }
-        
-        .terminal-button.minimize {
-            background-color: #ffbd2e;
-        }
-        
-        .terminal-button.maximize {
-            background-color: #27c93f;
-        }
-        
-        .terminal-output {
+        /* Terminal output area */
+        #terminal-output {
             flex: 1;
             overflow-y: auto;
-            padding: 12px 16px;
+            padding: 10px;
             background-color: var(--bg-color);
-            font-size: 14px;
-            line-height: 1.5;
-            white-space: pre-wrap;
-            overflow-wrap: break-word;
-            word-break: break-all;
+            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
         }
         
-        .terminal-output::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        
-        .terminal-output::-webkit-scrollbar-thumb {
-            background-color: #444;
-            border-radius: 4px;
-        }
-        
-        .terminal-output::-webkit-scrollbar-track {
-            background-color: var(--bg-color);
-        }
-        
-        .terminal-iframe-container {
-            flex: 1;
-            display: none;
-            border: none;
-            background-color: #fff;
-        }
-        
-        .terminal-iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        
-        .terminal-input-line {
+        /* Terminal input line */
+        #terminal-input-line {
             display: flex;
-            padding: 0 16px 12px 16px;
-            background-color: var(--bg-color);
+            background-color: var(--input-bg);
+            padding: 5px 10px;
+            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
         }
         
-        .terminal-prompt {
-            color: var(--prompt-color);
-            margin-right: 8px;
-            user-select: none;
+        #terminal-prompt {
+            color: var(--text-color);
+            margin-right: 5px;
         }
         
-        .terminal-input {
+        #terminal-input {
             flex: 1;
-            background: transparent;
+            background-color: transparent;
             border: none;
             color: var(--text-color);
-            font-family: var(--font-family);
-            font-size: 14px;
+            font-size: 16px;
             outline: none;
-            padding: 0;
-            caret-color: var(--cursor-color);
+            caret-color: var(--text-color);
         }
         
-        .terminal-cursor {
-            background-color: var(--cursor-color);
-            display: inline-block;
-            width: 8px;
-            height: 14px;
-            margin-left: 2px;
-            animation: blink 1s step-end infinite;
-        }
-        
-        .help-text {
+        /* Terminal status bar */
+        #terminal-status {
+            background-color: var(--status-bg);
             color: var(--text-color);
-            margin-top: 10px;
-            margin-bottom: 10px;
+            padding: 5px 10px;
+            font-size: 14px;
+            border-bottom-left-radius: 5px;
+            border-bottom-right-radius: 5px;
+            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
         }
         
-        .help-command {
-            color: var(--highlight-color);
-            margin-right: 10px;
-            display: inline-block;
-            min-width: 120px;
-        }
-        
-        .help-description {
-            color: var(--text-color);
-        }
-        
-        .error-text {
-            color: var(--error-color);
+        /* Output styling */
+        .success-text { color: var(--success-color); }
+        .error-text { color: var(--error-color); }
+        .warning-text { color: var(--warning-color); }
+        .info-text { color: var(--info-color); }
+        .highlight-text { color: var(--highlight-color); }
+        .command-highlight { 
+            color: var(--highlight-color); 
             font-weight: bold;
         }
         
-        .success-text {
-            color: var(--success-color);
-        }
-        
-        .warning-text {
-            color: var(--warning-color);
-        }
-        
-        .info-text {
-            color: var(--highlight-color);
+        /* Helper classes */
+        .blink {
+            animation: blink 1s infinite;
         }
         
         .ascii-art {
             color: var(--highlight-color);
             font-family: monospace;
             white-space: pre;
-            font-size: 10px;
+            margin: 10px 0;
             line-height: 1.2;
-            margin-bottom: 10px;
         }
         
-        .screen-block {
+        .terminal-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 15px;
+            background-color: var(--text-color);
+            animation: blink 1s infinite;
+            vertical-align: middle;
+        }
+        
+        /* Screen block when monitoring detected */
+        #screen-block {
             position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
+            width: 100%;
+            height: 100%;
             background-color: var(--bg-color);
             z-index: 1000;
             display: none;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            flex-direction: column;
-            color: #888;
-            font-size: 1.5em;
             text-align: center;
             padding: 20px;
         }
         
-        .status-bar {
-            background-color: var(--header-color);
+        #screen-block h1 {
+            color: var(--error-color);
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        
+        #screen-block p {
             color: var(--text-color);
-            font-size: 12px;
-            padding: 6px 12px;
-            display: flex;
-            justify-content: space-between;
-            border-top: 1px solid #333;
-            border-radius: 0 0 8px 8px;
-            user-select: none;
+            font-size: 18px;
+            margin-bottom: 10px;
+            max-width: 600px;
         }
         
-        .status-item {
-            display: flex;
-            align-items: center;
-        }
-        
-        .status-indicator {
+        /* Help command styling */
+        .help-command {
+            color: var(--highlight-color);
             display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            margin-right: 8px;
-            vertical-align: middle;
+            width: 120px;
         }
         
-        .status-indicator.active {
-            background-color: var(--success-color);
-            box-shadow: 0 0 5px var(--success-color);
+        .help-description {
+            color: var(--text-color);
         }
         
-        .status-indicator.inactive {
-            background-color: var(--error-color);
-            box-shadow: 0 0 5px var(--error-color);
+        /* Frame for browser */
+        #browser-frame {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            border: none;
         }
         
-        .status-indicator.warning {
-            background-color: var(--warning-color);
-            box-shadow: 0 0 5px var(--warning-color);
-        }
-        
+        /* Animations */
         @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0; }
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
         }
         
         @keyframes glitch {
@@ -282,75 +221,14 @@
             100% { transform: translate(0); }
         }
         
-        .glitch-text {
-            position: relative;
-            animation: glitch 0.5s infinite;
-            animation-timing-function: steps(2, end);
-        }
-        
-        ::selection {
-            background-color: var(--selection-color);
-        }
-        
-        .shortcut-hint {
-            margin-left: 4px;
-            padding: 2px 6px;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-            font-size: 11px;
-        }
-        
-        .token.punctuation {
-            color: #d4d4d4;
-        }
-        
-        /* Try inspecting this element. If you survive. */
-        
-        @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0; }
-        }
-        
-        @keyframes glitch {
-            0% { transform: translate(0); }
-            20% { transform: translate(-2px, 2px); }
-            40% { transform: translate(-2px, -2px); }
-            60% { transform: translate(2px, 2px); }
-            80% { transform: translate(2px, -2px); }
-            100% { transform: translate(0); }
-        }
-        
-        /* The style is broken because the truth leaked through. */
-        
-        .glitch-text {
-            position: relative;
-            animation: glitch 0.5s infinite;
-            animation-timing-function: steps(2, end);
-        }
-        
-        ::selection {
-            background-color: var(--selection-color);
-        }
-        
-        .shortcut-hint {
-            margin-left: 4px;
-            padding: 2px 6px;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-            font-size: 11px;
+        .glitch {
+            animation: glitch 0.2s ease-in-out infinite;
         }
     </style>
 </head>
 <body>
     <!-- He built this page. I embedded the memory. -->
-    <div class="terminal-header">
-        <span>BLACKOUT-SHELL — blackout@system:~</span>
-        <div class="terminal-controls">
-            <div class="terminal-button minimize"></div>
-            <div class="terminal-button maximize"></div>
-            <div class="terminal-button close"></div>
-        </div>
-    </div>
+    <!-- The deeper you look, the less you understand. -->
     
     <!-- Don't ask SDCast about this file. He doesn't know he made it. -->
     <div class="terminal-container">
@@ -379,7 +257,15 @@
             <span id="stealth-status">Stealth: Active</span>
         </div>
         <div class="status-item">
-            <span id="version-text">v2.0.0</span>
+            <span class="status-indicator active" id="monitoring-indicator"></span>
+            <span id="monitoring-status">NONE</span>
+        </div>
+        <div class="status-item">
+            <span class="status-indicator active" id="bypass-indicator"></span>
+            <span id="bypass-status">ON</span>
+        </div>
+        <div class="status-item">
+            <span id="version-text">v2.1.0</span>
         </div>
     </div>
     
@@ -417,20 +303,22 @@
             const extensionStatus = document.getElementById('extension-status');
             
             // State
-            let stealthMode = true;
+            let stealthMode = false;
             let browserMode = false;
             let historyIndex = 0;
             let commandHistory = [];
             let monitoringDetected = false;
-            let bypassMode = false;
+            let bypassMode = true; // Default to true
             let extensionDetected = false;
             let secretModeActive = false;
+            let isLightMode = false;
             
             /* This page renders fine. That's the problem. */
             
             // Constants
-            const VERSION = '2.0.0';
+            const VERSION = '2.1.0';
             const UNBLOCK_SERVICES = [
+                { name: 'Aroria', url: 'https://goguardian.vercel.app' },
                 { name: 'Hypertabs', url: 'https://hypertabs.cc/?url=' },
                 { name: 'Rammerhead', url: 'https://r.weeb-central.org/go/' },
                 { name: 'Ultraviolet', url: 'https://mathsspot.com/service/hvtrs8%2F-' }
@@ -516,7 +404,10 @@
                     // Check for secret activation sequence
                     if (secretCode.includes('lights-out')) {
                         secretModeActive = true;
+                        extensionDetected = true; // Force extension detected to be true
                         printOutput('Secret mode activated', 'success-text');
+                        printOutput('Bypassed GoGuardian requirement', 'success-text');
+                        updateStatusIndicators(); // Update the status to show extension is detected
                         secretCode = '';
                     }
                     
@@ -604,9 +495,9 @@
                 const cmd = args[0].toLowerCase();
                 
                 // Check if extension is required
-                if (!extensionDetected && !secretModeActive && cmd !== 'check') {
+                if (!extensionDetected && !secretModeActive && cmd !== 'check' && cmd !== 'secret') {
                     printOutput(`<span class="error-text">Error: GoGuardian extension required to use this feature.</span>`);
-                    printOutput(`<span class="info-text">Type 'check' to verify extension status.</span>`);
+                    printOutput(`<span class="info-text">Type 'check' to verify extension status or type 'lights-out' to bypass this restriction.</span>`);
                     return;
                 }
                 
@@ -651,6 +542,29 @@
                         printOutput('Cannot exit terminal directly.', 'warning-text');
                         printOutput('Use browser navigation to close this window.', 'info-text');
                         break;
+                    case 'darkmode':
+                        toggleDarkMode();
+                        break;
+                    case 'theme':
+                        toggleTheme(args);
+                        break;
+                    case 'aroria':
+                        // Direct access to Aroria service
+                        if (args.length > 1) {
+                            let url = args[1];
+                            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                                url = 'https://' + url;
+                            }
+                            const aroriaUrl = 'https://goguardian.vercel.app' + encodeURIComponent(url);
+                            browserFrame.src = aroriaUrl;
+                            printOutput(`Opening website via Aroria: ${url}`, 'success-text');
+                            toggleBrowserMode();
+                        } else {
+                            browserFrame.src = 'https://goguardian.vercel.app/';
+                            printOutput('Opening Aroria homepage', 'success-text');
+                            toggleBrowserMode();
+                        }
+                        break;
                     default:
                         printOutput(`Command not found: ${cmd}`, 'error-text');
                         printOutput('Type "help" for available commands', 'info-text');
@@ -664,6 +578,8 @@
                 printOutput('Available commands:');
                 printOutput('<span class="help-command">help</span><span class="help-description">Show this help message</span>');
                 printOutput('<span class="help-command">browse [url]</span><span class="help-description">Open browser with optional URL</span>');
+                printOutput('<span class="help-command">browse [url] [service]</span><span class="help-description">Open URL with specific proxy service (Aroria, Hypertabs, etc.)</span>');
+                printOutput('<span class="help-command">aroria [url]</span><span class="help-description">Open URL directly with Aroria proxy service</span>');
                 printOutput('<span class="help-command">status</span><span class="help-description">Display current protection status</span>');
                 printOutput('<span class="help-command">stealth</span><span class="help-description">Toggle stealth mode on/off</span>');
                 printOutput('<span class="help-command">bypass</span><span class="help-description">Toggle monitoring bypass mode</span>');
@@ -673,6 +589,8 @@
                 printOutput('<span class="help-command">update</span><span class="help-description">Show update information</span>');
                 printOutput('<span class="help-command">about</span><span class="help-description">Show information about this tool</span>');
                 printOutput('<span class="help-command">exit</span><span class="help-description">Exit the terminal</span>');
+                printOutput('<span class="help-command">darkmode</span><span class="help-description">Toggle between dark and light mode</span>');
+                printOutput('<span class="help-command">theme</span><span class="help-description">Switch between dark and light themes</span>');
                 printOutput('');
                 printOutput('Keyboard shortcuts:');
                 printOutput('<span class="help-command">Ctrl+C</span><span class="help-description">Cancel command or exit browser mode</span>');
@@ -687,12 +605,25 @@
                         url = 'https://' + url;
                     }
                     
-                    // Use unblocker service
-                    const finalUrl = DEFAULT_UNBLOCKER.url + encodeURIComponent(url);
+                    // Check for proxy service selection
+                    let selectedService = DEFAULT_UNBLOCKER;
+                    if (args.length > 2) {
+                        const serviceName = args[2].toLowerCase();
+                        const matchedService = UNBLOCK_SERVICES.find(s => s.name.toLowerCase() === serviceName);
+                        if (matchedService) {
+                            selectedService = matchedService;
+                        } else {
+                            printOutput(`Unknown proxy service: ${args[2]}`, 'warning-text');
+                            printOutput(`Available services: ${UNBLOCK_SERVICES.map(s => s.name).join(', ')}`, 'info-text');
+                        }
+                    }
+                    
+                    // Use selected unblocker service
+                    const finalUrl = selectedService.url + encodeURIComponent(url);
                     browserFrame.src = finalUrl;
                     
                     printOutput(`Opening website: ${url}`, 'success-text');
-                    printOutput(`Using unblocker: ${DEFAULT_UNBLOCKER.name}`, 'info-text');
+                    printOutput(`Using unblocker: ${selectedService.name}`, 'info-text');
                 } else {
                     browserFrame.src = 'about:blank';
                     printOutput('Opening blank browser page', 'info-text');
@@ -705,38 +636,73 @@
                 browserMode = !browserMode;
                 
                 if (browserMode) {
+                    // Make browser fill the entire screen
                     terminalOutput.style.display = 'none';
-                    iframeContainer.style.display = 'block';
+                    document.getElementById('terminal-input-line').style.display = 'none';
+                    document.querySelector('.status-bar').style.display = 'none';
+                    
+                    // Fix browser frame display
+                    browserFrame.style.display = 'block';
+                    browserFrame.style.position = 'fixed';
+                    browserFrame.style.top = '0';
+                    browserFrame.style.left = '0';
+                    browserFrame.style.width = '100%';
+                    browserFrame.style.height = '100%';
+                    browserFrame.style.border = 'none';
+                    browserFrame.style.zIndex = '999';
+                    
                     terminalInput.disabled = true;
+                    
+                    // Show minimal instructions overlay
+                    const overlay = document.createElement('div');
+                    overlay.id = 'browser-controls';
+                    overlay.style.position = 'fixed';
+                    overlay.style.bottom = '10px';
+                    overlay.style.right = '10px';
+                    overlay.style.background = 'rgba(0,0,0,0.7)';
+                    overlay.style.color = '#fff';
+                    overlay.style.padding = '5px 10px';
+                    overlay.style.borderRadius = '5px';
+                    overlay.style.zIndex = '1000';
+                    overlay.style.fontSize = '12px';
+                    overlay.innerHTML = 'Press Ctrl+C to exit browser';
+                    document.body.appendChild(overlay);
+                    
+                    // Add Ctrl+C handler directly to frame
+                    window.addEventListener('keydown', function browserKeyHandler(e) {
+                        if (e.ctrlKey && e.key === 'c') {
+                            toggleBrowserMode();
+                            window.removeEventListener('keydown', browserKeyHandler);
+                        }
+                    });
                 } else {
+                    // Restore terminal view
                     terminalOutput.style.display = 'block';
-                    iframeContainer.style.display = 'none';
+                    document.getElementById('terminal-input-line').style.display = 'flex';
+                    document.querySelector('.status-bar').style.display = 'flex';
+                    
+                    browserFrame.style.display = 'none';
                     terminalInput.disabled = false;
                     terminalInput.focus();
+                    
+                    // Remove any browser controls overlay
+                    const overlay = document.getElementById('browser-controls');
+                    if (overlay) {
+                        overlay.remove();
+                    }
                 }
             }
             
             function showStatus() {
-                printOutput('BLACKOUT Terminal Status', 'highlight-text');
-                printOutput('-'.repeat(30));
-                printOutput(`GoGuardian Extension: ${extensionDetected ? '<span class="success-text">DETECTED</span>' : '<span class="error-text">NOT FOUND</span>'}`);
-                printOutput(`Stealth Mode: ${stealthMode ? '<span class="success-text">ACTIVE</span>' : '<span class="error-text">INACTIVE</span>'}`);
-                
-                // Use monitoringState if available
-                if (window.monitoringState) {
-                    printOutput(`Bypass Mode: ${window.monitoringState.isBypassed() ? '<span class="success-text">ACTIVE</span>' : '<span class="error-text">INACTIVE</span>'}`);
-                    printOutput(`Monitoring Status: ${window.monitoringState.isDetected() ? '<span class="warning-text">DETECTED</span>' : '<span class="success-text">NONE</span>'}`);
-                } else {
-                    printOutput(`Bypass Mode: ${bypassMode ? '<span class="success-text">ACTIVE</span>' : '<span class="error-text">INACTIVE</span>'}`);
-                    printOutput(`Monitoring Status: ${monitoringDetected ? '<span class="warning-text">DETECTED</span>' : '<span class="success-text">NONE</span>'}`);
+                printOutput('=== SYSTEM STATUS ===', 'info-text');
+                printOutput(`Theme mode: ${isLightMode ? 'LIGHT' : 'DARK'}`, 'info-text');
+                printOutput(`Stealth mode: ${stealthMode ? 'ENABLED' : 'DISABLED'}`, 'info-text');
+                printOutput(`Monitoring bypass: ${bypassMode ? 'ENABLED' : 'DISABLED'}`, 'info-text');
+                printOutput(`Monitoring detected: ${monitoringDetected ? 'YES' : 'NO'}`, 'info-text');
+                if (monitoringDetected) {
+                    printOutput(`Detection count: ${detectionCount}`, 'warning-text');
                 }
-                
-                printOutput(`Current Mode: ${browserMode ? '<span class="info-text">Browser</span>' : '<span class="info-text">Terminal</span>'}`);
-                if (browserMode) {
-                    printOutput(`Current URL: ${browserFrame.src}`);
-                }
-                printOutput(`Secret Mode: ${secretModeActive ? '<span class="success-text">ACTIVE</span>' : '<span class="error-text">INACTIVE</span>'}`);
-                printOutput(`Version: ${VERSION}`);
+                printOutput('===================', 'info-text');
             }
             
             function toggleStealth() {
@@ -764,6 +730,7 @@
                 } else {
                     // Fallback if monitoringState is not available
                     bypassMode = !bypassMode;
+                    updateStatusIndicators();
                     
                     if (bypassMode) {
                         printOutput('Bypass mode activated', 'success-text');
@@ -771,6 +738,15 @@
                     } else {
                         printOutput('Bypass mode deactivated', 'warning-text');
                         printOutput('Content will be hidden when monitoring is detected', 'info-text');
+                    }
+                    
+                    // If monitoring is currently detected, update display
+                    if (monitoringDetected) {
+                        if (!bypassMode && stealthMode) {
+                            screenBlock.style.display = 'flex';
+                        } else {
+                            screenBlock.style.display = 'none';
+                        }
                     }
                 }
             }
@@ -807,14 +783,16 @@
             }
             
             function showUpdateInfo() {
-                printOutput('BLACKOUT v2.0.0 Update Information', 'highlight-text');
+                printOutput('BLACKOUT v2.1.0 Update Information', 'highlight-text');
                 printOutput('-'.repeat(40));
                 printOutput('New features:');
                 printOutput('• Multiple interface themes (Terminal, Document, Editor)');
                 printOutput('• Enhanced GoGuardian detection with less false positives');
-                printOutput('• Integrated unblocker services for restricted sites');
+                printOutput('• Integrated Aroria service for improved unblocker performance');
+                printOutput('• Full-screen browser mode with improved display');
+                printOutput('• Multiple proxy service options (Aroria, Hypertabs, etc.)');
                 printOutput('• More realistic terminal interface');
-                printOutput('• Fixed Ctrl+C functionality in terminal');
+                printOutput('• Fixed Ctrl+C functionality in terminal and browser');
                 printOutput('• Improved "secret" command functionality');
                 printOutput('• New command: check - Verify GoGuardian extension');
                 printOutput('');
@@ -838,8 +816,10 @@
                             break;
                         case 'unlock':
                             secretModeActive = true;
+                            extensionDetected = true;
                             printOutput('Secret mode activated forcefully', 'success-text');
                             printOutput('All features are now unlocked', 'info-text');
+                            updateStatusIndicators();
                             break;
                         case 'block':
                             possibleMonitoringDetected(true);
@@ -906,6 +886,42 @@
                     extensionIndicator.classList.add('inactive');
                     extensionStatus.textContent = 'Extension: Not Found';
                 }
+                
+                // Update monitoring status
+                const monitoringIndicator = document.getElementById('monitoring-indicator');
+                const monitoringStatus = document.getElementById('monitoring-status');
+                
+                if (monitoringStatus) {
+                    if (monitoringDetected) {
+                        monitoringIndicator.classList.remove('inactive');
+                        monitoringIndicator.classList.add('active');
+                        monitoringStatus.textContent = 'DETECTED';
+                        monitoringStatus.style.color = '#ff5555';
+                    } else {
+                        monitoringIndicator.classList.remove('active');
+                        monitoringIndicator.classList.add('inactive');
+                        monitoringStatus.textContent = 'NONE';
+                        monitoringStatus.style.color = '#55ff55';
+                    }
+                }
+                
+                // Update bypass mode indicator
+                const bypassIndicator = document.getElementById('bypass-indicator');
+                const bypassStatus = document.getElementById('bypass-status');
+                
+                if (bypassStatus) {
+                    if (bypassMode) {
+                        bypassIndicator.classList.remove('inactive');
+                        bypassIndicator.classList.add('active');
+                        bypassStatus.textContent = 'ON';
+                        bypassStatus.style.color = '#55ff55';
+                    } else {
+                        bypassIndicator.classList.remove('active');
+                        bypassIndicator.classList.add('inactive');
+                        bypassStatus.textContent = 'OFF';
+                        bypassStatus.style.color = '#ff5555';
+                    }
+                }
             }
             
             function clearTerminal() {
@@ -963,8 +979,14 @@
                     }
                 });
                 
-                // Set the detection status
-                extensionDetected = ggElements.length > 0 || scriptDetected;
+                // If secret mode is active, force extension detected to be true
+                if (secretModeActive) {
+                    extensionDetected = true;
+                } else {
+                    // Set the detection status
+                    extensionDetected = ggElements.length > 0 || scriptDetected;
+                }
+                
                 updateStatusIndicators();
                 
                 if (verbose) {
@@ -974,7 +996,7 @@
                     } else {
                         printOutput('GoGuardian extension not detected', 'error-text');
                         printOutput('Limited functionality available', 'warning-text');
-                        printOutput('Type "secret" for override options', 'info-text');
+                        printOutput('Type "lights-out" or try the "secret unlock" command to bypass this restriction', 'info-text');
                     }
                 }
                 
@@ -989,7 +1011,7 @@
                 let detectionCount = 0;
                 let lastDetectionTime = 0;
                 let monitoringDetected = false;
-                let bypassMonitoring = true; // Default to true for bypass mode
+                let bypassMode = true; // Default to true for bypass mode
                 
                 // Tracking for focus/blur events
                 let focusBlurCount = 0;
@@ -1090,32 +1112,23 @@
                     }
                 }
                 
-                function possibleMonitoringDetected() {
+                function possibleMonitoringDetected(force = false) {
                     const currentTime = Date.now();
-                    // If this is a new detection (not within the last second)
-                    if (currentTime - lastDetectionTime > 1000) {
+                    // If this is a new detection (not within the last second) or forced
+                    if ((currentTime - lastDetectionTime > 1000) || force) {
                         detectionCount++;
                         lastDetectionTime = currentTime;
                         
-                        // If we've had multiple detections, consider monitoring detected
-                        if (detectionCount > 3 && !monitoringDetected) {
+                        // If we've had multiple detections or force, consider monitoring detected
+                        if ((detectionCount > 3 || force) && !monitoringDetected) {
                             monitoringDetected = true;
                             updateStatusIndicators();
                             
-                            if (!bypassMonitoring) {
+                            if (stealthMode && !bypassMode) {
                                 activateScreenBlock();
                             }
                         }
                     }
-                }
-                
-                function updateStatusIndicators() {
-                    document.getElementById('monitoring-status').textContent = monitoringDetected ? 'DETECTED' : 'NONE';
-                    document.getElementById('monitoring-status').style.color = monitoringDetected ? '#ff5555' : '#55ff55';
-                    
-                    // Update bypass mode indicator
-                    document.getElementById('bypass-status').textContent = bypassMonitoring ? 'ON' : 'OFF';
-                    document.getElementById('bypass-status').style.color = bypassMonitoring ? '#ff5555' : '#55ff55';
                 }
                 
                 function activateScreenBlock() {
@@ -1125,7 +1138,7 @@
                         
                         // After 3 seconds, check if we should keep blocking based on bypass mode
                         setTimeout(() => {
-                            if (bypassMonitoring) {
+                            if (bypassMode) {
                                 screenBlock.style.display = 'none';
                             }
                         }, 3000);
@@ -1142,20 +1155,20 @@
                 
                 // Make bypass toggle function available globally
                 window.toggleBypassMode = function() {
-                    bypassMonitoring = !bypassMonitoring;
+                    bypassMode = !bypassMode;
                     updateStatusIndicators();
                     
                     // Display notification in terminal
-                    const message = bypassMonitoring 
+                    const message = bypassMode 
                         ? 'Bypass mode enabled. Monitoring will be detected but content will remain visible.' 
                         : 'Bypass mode disabled. Content will be hidden when monitoring is detected.';
                     
-                    printToTerminal(message);
+                    printOutput(message);
                     
                     // If monitoring is currently detected and we've turned off bypass, hide content
-                    if (monitoringDetected && !bypassMonitoring) {
+                    if (monitoringDetected && !bypassMode) {
                         activateScreenBlock();
-                    } else if (monitoringDetected && bypassMonitoring) {
+                    } else if (monitoringDetected && bypassMode) {
                         // If monitoring is detected but we've turned on bypass, show content
                         document.getElementById('screen-block').style.display = 'none';
                     }
@@ -1164,7 +1177,7 @@
                 // Export functions and state for use in command processing
                 window.monitoringState = {
                     isDetected: () => monitoringDetected,
-                    isBypassed: () => bypassMonitoring,
+                    isBypassed: () => bypassMode,
                     toggleBypass: () => window.toggleBypassMode()
                 };
                 
@@ -1487,6 +1500,79 @@
                         printOutput('Default dark theme applied', 'success-text');
                         break;
                 }
+            }
+            
+            function toggleTheme(args) {
+                if (args.length <= 1) {
+                    // Toggle between light and dark modes
+                    if (args.length === 0) {
+                        isLightMode = !isLightMode;
+                    } else if (args.length === 1) {
+                        const mode = args[0].toLowerCase();
+                        if (mode === 'light') {
+                            isLightMode = true;
+                        } else if (mode === 'dark') {
+                            isLightMode = false;
+                        } else {
+                            printOutput('Invalid theme mode. Use "light" or "dark"', 'error-text');
+                            return;
+                        }
+                    }
+                    
+                    if (isLightMode) {
+                        document.body.classList.add('light-mode');
+                        printOutput('Switched to light mode', 'success-text');
+                    } else {
+                        document.body.classList.remove('light-mode');
+                        printOutput('Switched to dark mode', 'success-text');
+                    }
+                } else {
+                    printOutput('Usage: theme [light|dark]', 'error-text');
+                }
+                showStatus();
+            }
+            
+            // Listen for keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Focus on the input when a key is pressed
+                if (!e.altKey && e.key !== 'Tab' && !e.ctrlKey && !e.metaKey) {
+                    document.getElementById('terminal-input').focus();
+                }
+                
+                // Alt + S: Toggle stealth mode
+                if (e.altKey && e.key === 's') {
+                    toggleStealth();
+                    e.preventDefault();
+                }
+                
+                // Alt + B: Toggle bypass mode
+                if (e.altKey && e.key === 'b') {
+                    toggleBypass();
+                    e.preventDefault();
+                }
+                
+                // Alt + E: Emergency block
+                if (e.altKey && e.key === 'e') {
+                    activateEmergencyBlock();
+                    e.preventDefault();
+                }
+                
+                // Alt + D: Toggle dark/light mode
+                if (e.altKey && e.key === 'd') {
+                    toggleDarkMode();
+                    e.preventDefault();
+                }
+                
+                // Secret phrase detection
+                secretModeActive = e.key.toLowerCase().includes('lights-out');
+            });
+            
+            // Toggle between dark and light mode
+            function toggleDarkMode() {
+                document.body.classList.toggle('light-mode');
+                const isLightMode = document.body.classList.contains('light-mode');
+                printOutput(`Display mode changed to ${isLightMode ? 'LIGHT' : 'DARK'}`);
+                updateStatus();
             }
         });
         
